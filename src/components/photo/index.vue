@@ -1,9 +1,6 @@
 <template>
-    <!--    <div v-for="(item, i) in photo" :key="i">-->
-    <!--        <img :src="item.url">-->
-    <!--    </div>-->
     <div>
-        <img src="https://disk-1305749742.cos.ap-shanghai.myqcloud.com/mall/34411632647696654.png">
+        <fileTable :pictureList="pictureList"></fileTable>
     </div>
 </template>
 
@@ -11,4 +8,16 @@
     @import "index.css";
 </style>
 <script>
+    import fileTable from '../common/fileTable'
+    export default {
+        name: 'photo',
+        props: ['pictureList'],
+        components: {
+            fileTable
+        },
+        data () {
+            return {}
+        },
+        methods: {}
+    }
 </script>

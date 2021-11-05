@@ -83,7 +83,7 @@
                             </Menu>
                         </Sider>
                         <Content :style="{padding: '24px', minHeight: '280px', background: '#fff'}">
-                            <photo v-show="typeName === '图片'"></photo>
+                            <photo v-if="typeName === '图片'" :pictureList="pictureList"></photo>
                         </Content>
                     </Layout>
                 </Content>
@@ -124,7 +124,10 @@
                     }
                 ],
                 breadcrumb: ['主页'],
-                typeName: ''
+                typeName: null,
+                pictureList: [],
+                pageSize: 5,
+                pageNo: 0
             }
         },
         components: {
@@ -132,32 +135,46 @@
         },
         created () {
             this.$nextTick(() => {
-                this.typeName = this.$route.query.typeName
-                this.$refs.typeName.opened()
-                this.$refs.typeName.updateActiveName()
-            })
-        },
-        watch: {
-            $route: {
-                handler (val) {
-                    this.typeName = val.query.typeName
+                if (this.$route.query.typeName) {
+                    this.typeName = this.$route.query.typeName
+                    this.$refs.typeName.updateActiveName()
                 }
-            }
+            })
+            this.loadFile()
         },
+        // watch: {
+        //     $route: {
+        //         handler (val) {
+        //             this.typeName = val.query.typeName
+        //             this.loadPicture()
+        //         }
+        //     }
+        // },
         methods: {
             showName (name) {
                 console.log(name)
             },
             changeType (e) {
-                this.$router.push({
-                    path: '/homePage',
-                    query: {
-                        typeName: e
-                    }
-                })
+                this.$route.query.typeName = e
+                this.typeName = e
             },
             parentTag (e) {
                 console.log(e[0])
+            },
+            loadFile () {
+                this.axios.get('/file/getPage', {
+                    params: {
+                        pageSize: this.pageSize,
+                        pageNo: this.pageNo
+                    }
+                }).then(res => {
+                    this.pictureList = res.data
+                    this.pictureList.forEach(item => {
+                        item.createdDate = this.$moment(item.createdDate).format('YYYY-MM-DD HH:mm:ss')
+                    })
+                }).catch(error => {
+                    console.log(error)
+                })
             }
         }
     }
