@@ -83,7 +83,7 @@
                             </Menu>
                         </Sider>
                         <Content :style="{padding: '24px', minHeight: '280px', background: '#fff'}">
-                            <photo v-if="typeName === '图片'" :pictureList="pictureList"></photo>
+                            <file :fileList="fileList" :typeCode="typeCode"></file>
                         </Content>
                     </Layout>
                 </Content>
@@ -96,42 +96,23 @@
     @import "index.css";
 </style>
 <script>
-    import photo from '../photo/index'
+    import file from '../photo/index'
 
     export default {
         name: 'homePage',
         data () {
             return {
                 name: '',
-                menu: [
-                    {
-                        name: '我的文件',
-                        icon: 'ios-navigate',
-                        groups: [
-                            {
-                                name: '文档'
-                            },
-                            {
-                                name: '视频'
-                            },
-                            {
-                                name: '音乐'
-                            },
-                            {
-                                name: '图片'
-                            }
-                        ]
-                    }
-                ],
                 breadcrumb: ['主页'],
                 typeName: null,
-                pictureList: [],
+                fileList: [],
                 pageSize: 5,
-                pageNo: 0
+                pageNo: 0,
+                typeCode: 0
             }
         },
         components: {
-            photo
+            file
         },
         created () {
             this.$nextTick(() => {
@@ -140,7 +121,7 @@
                     this.$refs.typeName.updateActiveName()
                 }
             })
-            this.loadFile()
+            // this.loadFile()
         },
         // watch: {
         //     $route: {
@@ -157,19 +138,33 @@
             changeType (e) {
                 this.$route.query.typeName = e
                 this.typeName = e
+                switch (this.typeName) {
+                case '视频':
+                    this.typeCode = 1
+                    break
+                case '文档':
+                    this.typeCode = 2
+                    break
+                case '音乐':
+                    this.typeCode = 3
+                    break
+                case '图片':
+                    this.typeCode = 4
+                    break
+                }
+                this.loadFile()
             },
             parentTag (e) {
                 console.log(e[0])
             },
             loadFile () {
-                this.axios.get('/file/getPage', {
-                    params: {
-                        pageSize: this.pageSize,
-                        pageNo: this.pageNo
-                    }
+                this.axios.post('/file/getPage', {
+                    pageSize: this.pageSize,
+                    pageNo: this.pageNo,
+                    typeCode: this.typeCode
                 }).then(res => {
-                    this.pictureList = res.data
-                    this.pictureList.forEach(item => {
+                    this.fileList = res.data
+                    this.fileList.forEach(item => {
                         item.createdDate = this.$moment(item.createdDate).format('YYYY-MM-DD HH:mm:ss')
                     })
                 }).catch(error => {

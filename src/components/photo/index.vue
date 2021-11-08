@@ -1,6 +1,6 @@
 <template>
     <div>
-        <fileTable :pictureList="pictureList"></fileTable>
+        <fileTable :tableData="fileList" :typeCode="typeCode"></fileTable>
     </div>
 </template>
 
@@ -10,8 +10,8 @@
 <script>
     import fileTable from '../common/fileTable'
     export default {
-        name: 'photo',
-        props: ['pictureList'],
+        name: 'file',
+        props: ['fileList', 'typeCode'],
         components: {
             fileTable
         },
