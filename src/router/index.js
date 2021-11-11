@@ -20,6 +20,16 @@ export default new Router({
             path: '/photo',
             name: 'photo',
             component: photo
+        },
+        {
+            path: '/login',
+            name: 'login',
+            component: () => import('../components/login/index')
+        },
+        {
+            path: '/register',
+            name: 'register',
+            component: () => import('../components/register/index')
         }
     ]
 })

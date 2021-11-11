@@ -21,9 +21,9 @@
                 <Menu mode="horizontal" theme="dark" active-name="1">
                     <div class="layout-logo"></div>
                     <div class="layout-nav">
-                        <MenuItem name="1">
+                        <MenuItem name="1" @click.native="doLogin">
                             <Icon type="ios-navigate"></Icon>
-                            Item 1
+                            登录
                         </MenuItem>
                         <MenuItem name="2">
                             <Icon type="ios-keypad"></Icon>
@@ -132,6 +132,12 @@
         //     }
         // },
         methods: {
+            doLogin () {
+                console.log(1)
+                this.$router.push({
+                    name: 'register'
+                })
+            },
             showName (name) {
                 console.log(name)
             },
