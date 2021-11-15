@@ -2,7 +2,7 @@
     <div class="register">
         <img :src='backgroundUrl' class="background">
         <div class="front">
-            <Form ref="formValidate" :model="formValidate" :rules="ruleValidate" :label-width="80">
+            <Form ref="formValidate" id="form" :model="formValidate" :rules="ruleValidate" :label-width="80">
                 <Form-item label="姓名" prop="name">
                     <Input v-model="formValidate.name" placeholder="请输入姓名"></Input>
                 </Form-item>
@@ -66,7 +66,7 @@
         name: 'register',
         data () {
             return {
-                backgroundUrl: require('../../../static/image/background.jpeg'),
+                backgroundUrl: require('../../../static/image/注册.gif'),
                 formValidate: {
                     name: '',
                     mail: '',

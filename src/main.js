@@ -15,6 +15,33 @@ import ElementUI from 'element-ui'
 // 引入ElementUI 组件库的css样式
 import 'element-ui/lib/theme-chalk/index.css'
 
+import 'viewerjs/dist/viewer.css'
+import Viewer from 'v-viewer'
+import Video from 'video.js'
+import 'video.js/dist/video-js.css'
+
+Vue.prototype.$video = Video
+// 引入图片浏览插件
+Vue.use(Viewer)
+// 引入图片浏览插件
+Viewer.setDefaults({
+    Options: {
+        'inline': true,
+        'button': true,
+        'navbar': true,
+        'title': true,
+        'toolbar': true,
+        'tooltip': true,
+        'movable': true,
+        'zoomable': true,
+        'rotatable': true,
+        'scalable': true,
+        'transition': true,
+        'fullscreen': true,
+        'keyboard': true,
+        'url': 'data-source'
+    }
+})
 Vue.filter('dateformat', function (dataStr, pattern = 'YYYY-MM-DD HH:mm:ss') {
     return Moment(dataStr).format(pattern)
 })

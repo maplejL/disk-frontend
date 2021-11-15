@@ -13,6 +13,14 @@
 .front {
     z-index: 1;
     width: 400px;
-    height: 600px;
-    margin: auto;
+    height: auto;
+    position: absolute;
+    left: 60%;
+    top: 10%;
+    background-color: white;
+    border-radius: 5%;
+}
+
+#form {
+    padding: 20px;
 }
