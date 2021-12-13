@@ -1,14 +1,18 @@
 <template>
-    <div>
+    <div style="float: left">
         <upload :typeCode="typeCode"></upload>
-        <div v-show = "isPlay === 1">
+        <!--        <video v-show = "isPlay === 1"></video>-->
+        <div class='mask' v-if='isPlay == 1' @click='masksCloseFun'></div>
+        <div class="videomasks" v-if="isPlay == 1">
             <VideoPlayer :options="videoOptions" class="video"></VideoPlayer>
         </div>
+
         <el-table
                 :data="tableData"
-                height="700"
-                style="width: 80%"
-                >
+                height="570px"
+                style="width: 90%"
+                @row-click="toDetail"
+        >
             <el-table-column
                     type="selection"
                     width="55">
@@ -20,19 +24,19 @@
                               @click="setSrc(scope.row.url, scope.row.typeCode)"
                               style="height: 50px"
                               fit="scale-down"
-                              >
+                    >
                     </el-image>
                     <el-image v-else
                               :src="scope.row.thumbnailName"
                               style="height: 50px"
-                              @click="setSrc(scope.row.thumbnailName, scope.row.typeCode)"
-                              >
+                              @click="setSrc(scope.row.url, scope.row.typeCode)"
+                    >
                     </el-image>
                     <el-image-viewer
                             v-if="showViewer === 1"
                             style="transform: scale(1) rotate(0deg); margin: auto; max-height: 70%; max-width: 70%;"
                             :on-close="closeViewer"
-                            :url-list="srcList" />
+                            :url-list="srcList"/>
                 </template>
             </el-table-column>
             <el-table-column
@@ -45,21 +49,14 @@
             <el-table-column
                     prop="createdDate"
                     label="修改时间"
-                    width="200px">
+                    width="250px">
             </el-table-column>
             <el-table-column
                     prop="size"
                     label="大小"
-                    width="200px">
+                    width="250px">
             </el-table-column>
         </el-table>
-        <div class="block">
-            <el-pagination
-                    layout="prev, pager, next"
-                    :total="50"
-                    :page-size="5">
-            </el-pagination>
-        </div>
     </div>
 </template>
 
@@ -67,19 +64,42 @@
     /deep/ .el-image-viewer__wrapper {
         height: 50%;
     }
+
     .video {
-        width: 70%;
+        width: 75%;
         height: 50%;
         position: absolute;
-        top: 20%;
-        z-index: 99;
+        top: 10%;
+        left: 12%;
+        z-index: 1000;
+    }
+
+    .mask {
+        position: fixed;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        right: 0;
+        z-index: 999;
+        background-color: #000000;
+        opacity: .6;
+    }
+
+    /deep/ .vjs-big-play-button {
+        margin: auto;
+        top: 0px;
+        bottom: 0px;
+        left: 0px;
+        right: 0px;
     }
 </style>
 
 <script>
     import ElImageViewer from 'element-ui/packages/image/src/image-viewer'
-    import upload from './upload'
-    import VideoPlayer from './VideoPlayer'
+    import upload from '../../common/upload'
+    import VideoPlayer from '../../common/VideoPlayer'
+    import video from '../../common/video'
+
     export default {
         name: 'fileTable',
         props: ['tableData', 'typeCode'],
@@ -88,8 +108,9 @@
                 srcList: [],
                 showViewer: 0,
                 isPlay: 0,
+                videoState: false,
                 videoOptions: {
-                    autoplay: 'muted', // 自动播放
+                    autoplay: '', // 自动播放
                     controls: true, // 用户可以与之交互的控件
                     loop: true, // 视频一结束就重新开始
                     muted: false, // 默认情况下将使所有音频静音
@@ -109,21 +130,39 @@
         components: {
             upload,
             ElImageViewer,
-            VideoPlayer
+            VideoPlayer,
+            video
         },
         methods: {
+            ok () {
+                this.$Message.info('点击了确定')
+            },
+            cancel () {
+                this.$Message.info('点击了取消')
+            },
             setSrc (url, typeCode) {
-                this.srcList = []
-                this.srcList.push(url)
-                this.showViewer = 1
                 if (typeCode === 1) {
                     this.isPlay = 1
                     this.showViewer = 0
-                    console.log(this.isPlay)
+                    this.videoOptions.sources[0].src = url
+                } else {
+                    this.srcList = []
+                    this.srcList.push(url)
+                    this.showViewer = 1
                 }
             },
             closeViewer () {
                 this.showViewer = 0
+            },
+            masksCloseFun () {
+                this.isPlay = 0
+            },
+            toDetail (row) {
+                this.$emit('toDetail', row)
+            },
+            play (url) {
+                this.videoOptions.sources[0].src = url
+                this.isPlay = 1
             }
         }
     }

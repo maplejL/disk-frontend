@@ -96,7 +96,7 @@
     @import "index.css";
 </style>
 <script>
-    import file from '../photo/index'
+    import file from '../fileTable/index'
 
     export default {
         name: 'homePage',
@@ -172,6 +172,7 @@
                     this.fileList = res.data
                     this.fileList.forEach(item => {
                         item.createdDate = this.$moment(item.createdDate).format('YYYY-MM-DD HH:mm:ss')
+                        item.modifiedDate = this.$moment(item.modifiedDate).format('YYYY-MM-DD HH:mm:ss')
                     })
                 }).catch(error => {
                     console.log(error)

@@ -1,7 +1,7 @@
 import Vue from 'vue'
 import Router from 'vue-router'
 import homePage from '@/components/homePage/index'
-import photo from '../components/photo/index'
+import photo from '../components/fileTable/index'
 
 Vue.use(Router)
 
@@ -17,7 +17,7 @@ export default new Router({
             component: homePage
         },
         {
-            path: '/photo',
+            path: '/fileTable',
             name: 'photo',
             component: photo
         },
