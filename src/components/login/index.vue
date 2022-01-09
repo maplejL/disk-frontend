@@ -8,8 +8,8 @@
             >
             </canvas>
         </div>
-        <div id="loginBox">
-            <h4>登录</h4>
+        <div v-if="showLogin === 1" id="loginBox">
+            <h2>登录</h2>
             <el-form
                     :model="loginForm"
                     :rules="loginRules"
@@ -22,14 +22,14 @@
                         style="margin-top:40px;"
                 >
                     <el-row>
-                        <el-col :span='2'>
-                            <span class="iconfont">&#xe654;</span>
+                        <el-col :span='4'>
+                            <span class="iconfont">用户名:</span>
                         </el-col>
-                        <el-col :span='22'>
+                        <el-col :span='19'>
                             <el-input
                                     class="inps"
                                     placeholder='用户名'
-                                    v-model="loginForm.userName"
+                                    v-model="loginForm.username"
                             ></el-input>
                         </el-col>
                     </el-row>
@@ -39,25 +39,154 @@
                         prop="passWord"
                 >
                     <el-row>
-                        <el-col :span='2'>
-                            <span class="iconfont">&#xe616;</span>
+                        <el-col :span='4'>
+                            <span class="iconfont">密码:</span>
                         </el-col>
-                        <el-col :span='22'>
+                        <el-col :span='18'>
                             <el-input
+                                    type="password"
                                     class="inps"
                                     placeholder='密码'
-                                    v-model="loginForm.passWord"
+                                    v-model="loginForm.password"
                             ></el-input>
                         </el-col>
                     </el-row>
                 </el-form-item>
-                <el-form-item style="margin-top:55px;">
+                <el-form-item style="margin-left:50px;">
                     <el-button
                             type="primary"
                             round
                             class="submitBtn"
                             @click="submitForm"
-                    >登录</el-button>
+                    >登录
+                    </el-button>
+                </el-form-item>
+                <el-form-item style="margin-left:50px;">
+                    <el-button
+                            type="primary"
+                            round
+                            class="registerButton"
+                            @click="changeView"
+                    >注册
+                    </el-button>
+                </el-form-item>
+            </el-form>
+        </div>
+        <div v-else id="registerBox">
+            <h3>注册</h3>
+            <el-form
+                    :model="registerForm"
+                    :rules="ruleValidate"
+                    ref="loginForm"
+                    label-width="0px"
+            >
+                <el-form-item
+                        label=""
+                        prop="username"
+                        style="margin-top:40px;"
+                >
+                    <el-row>
+                        <el-col :span='4'>
+                            <span class="iconfont">用户名:</span>
+                        </el-col>
+                        <el-col :span='19'>
+                            <el-input
+                                    class="inps"
+                                    placeholder='用户名'
+                                    v-model="registerForm.username"
+                            ></el-input>
+                        </el-col>
+                    </el-row>
+                </el-form-item>
+                <el-form-item
+                        label=""
+                        prop="passWord"
+                >
+                    <el-row>
+                        <el-col :span='4'>
+                            <span class="iconfont">密码:</span>
+                        </el-col>
+                        <el-col :span='19'>
+                            <el-input
+                                    type="password"
+                                    class="inps"
+                                    placeholder='密码'
+                                    v-model="registerForm.password"
+                            ></el-input>
+                        </el-col>
+                    </el-row>
+                </el-form-item>
+                <el-form-item
+                        label=""
+                        prop="email"
+                        style="margin-top:20px;"
+                >
+                    <el-row>
+                        <el-col :span='4'>
+                            <span class="iconfont">邮箱:</span>
+                        </el-col>
+                        <el-col :span='19'>
+                            <el-input
+                                    class="inps"
+                                    placeholder='邮箱'
+                                    v-model="registerForm.email"
+                            ></el-input>
+                        </el-col>
+                    </el-row>
+                </el-form-item>
+                <el-form-item
+                        label=""
+                        prop="city"
+                        style="margin-top:20px;"
+                >
+                    <el-row>
+                        <el-col :span='4'>
+                            <span class="iconfont">城市:</span>
+                        </el-col>
+                        <el-col :span='19'>
+                            <el-input
+                                    class="inps"
+                                    placeholder='城市'
+                                    v-model="registerForm.city"
+                            ></el-input>
+                        </el-col>
+                    </el-row>
+                </el-form-item>
+                <el-form-item
+                        label=""
+                        prop="sex"
+                        style="margin-top:20px;"
+                >
+                    <el-row>
+                        <el-col :span='4'>
+                            <span class="iconfont">性别:</span>
+                        </el-col>
+                        <el-col :span='19'>
+                            <el-input
+                                    class="inps"
+                                    placeholder='性别'
+                                    v-model="registerForm.sex"
+                            ></el-input>
+                        </el-col>
+                    </el-row>
+                </el-form-item>
+                <el-form-item style="margin-left: 60px;">
+                    <el-button
+                            type="primary"
+                            round
+                            class="submitBtn"
+                            @click="cancelRegister"
+                    >取消
+                    </el-button>
+                </el-form-item>
+                <el-form-item style="margin-left: 60px;">
+                    <el-button
+                            type="primary"
+                            round
+                            class="registerButton"
+                            @click="doRegister"
+                    >提交
+                    </el-button>
                 </el-form-item>
             </el-form>
         </div>
@@ -65,12 +194,55 @@
 </template>
 
 <script>
+    import JSEncrypt from 'jsencrypt'
+
     export default {
         data () {
             return {
                 canvas: null,
                 context: null,
                 stars: [], // 星星数组
+                showLogin: 1,
+                publicKey: '',
+                ruleValidate: {
+                    username: [
+                        { required: true, message: '姓名不能为空', trigger: 'blur' }
+                    ],
+                    password: [
+                        { required: true, message: '密码不能为空', trigger: 'blur' }
+                    ],
+                    email: [
+                        { required: true, message: '邮箱不能为空', trigger: 'blur' },
+                        { type: 'email', message: '邮箱格式不正确', trigger: 'blur' }
+                    ],
+                    city: [
+                        { required: true, message: '请选择城市', trigger: 'change' }
+                    ],
+                    sex: [
+                        { required: true, message: '请选择性别', trigger: 'change' }
+                    ]
+                    // interest: [
+                    //     { required: true, type: 'array', min: 1, message: '至少选择一个爱好', trigger: 'change' },
+                    //     { type: 'array', max: 2, message: '最多选择两个爱好', trigger: 'change' }
+                    // ],
+                    // date: [
+                    //     { required: true, type: 'date', message: '请选择日期', trigger: 'change' }
+                    // ],
+                    // time: [
+                    //     { required: true, type: 'date', message: '请选择时间', trigger: 'change' }
+                    // ],
+                    // desc: [
+                    //     { required: true, message: '请输入个人介绍', trigger: 'blur' },
+                    //     { type: 'string', min: 20, message: '介绍不能少于20字', trigger: 'blur' }
+                    // ]
+                },
+                registerForm: {
+                    username: '',
+                    password: '',
+                    email: '',
+                    city: '',
+                    sex: ''
+                },
                 shadowColorList: [
                     '#39f',
                     '#ec5707',
@@ -116,21 +288,65 @@
                 }, // 工厂模式定义Ball类
                 width: window.innerWidth,
                 height: window.innerHeight,
+                result1: null,
                 loginForm: {
-                    userName: '',
-                    passWord: ''
+                    username: '',
+                    password: ''
                 },
                 loginRules: {
-                    userName: [
-                        { required: true, message: '请输入用户名', trigger: 'blur' }
+                    username: [
+                        {required: true, message: '请输入用户名', trigger: 'blur'}
                     ],
-                    passWord: [{ required: true, message: '请输入密码', trigger: 'blur' }]
+                    password: [{required: true, message: '请输入密码', trigger: 'blur'}]
                 }
             }
         },
+        mounted () {
+            this.canvas = document.getElementById('myCanvas')
+            this.context = this.canvas.getContext('2d')
+
+            this.createStar(true)
+            this.drawFrame()
+            this.getPublicKey()
+        },
         methods: {
+            async getPublicKey () {
+                let res = await this.axios.get('/user/getPublicKey')
+                this.global.setPublicKey(res.data.data.publicKey)
+                console.log(res.data.data.publicKey)
+                console.log(this.global.publicKey)
+            },
+            changeView () {
+                this.showLogin = 0
+                console.log(this.publicKey)
+            },
+            doRegister () {
+                let encryptor = new JSEncrypt()
+                console.log(this.global.publicKey)
+                encryptor.setPublicKey(this.global.publicKey)
+                this.registerForm.password = encryptor.encrypt(this.registerForm.password)
+                console.log(this.registerForm.password)
+                this.axios.post('/user/register', this.registerForm).then(res => {
+                    console.log(res)
+                })
+            },
+            cancelRegister () {
+                this.showLogin = 1
+            },
             // 提交登录
-            submitForm () {},
+            async submitForm () {
+                let encryptor = new JSEncrypt()
+                encryptor.setPublicKey(this.global.publicKey)
+                this.loginForm.password = encryptor.encrypt(this.loginForm.password)
+                let res = await this.post('/user/login', this.loginForm)
+                console.log(res)
+                // this.$message.success('登陆成功')
+                // localStorage.setItem('userInfo', JSON.stringify(res.data.data.userInfo))
+                // this.axios.defaults.headers.common['token'] = res.data.data.token
+                // setTimeout(() => {
+                //     this.$router.push('/homePage')
+                // }, 2000)
+            },
             // 重复动画
             drawFrame () {
                 // eslint-disable-next-line no-unused-vars
@@ -217,13 +433,6 @@
                 }
                 star.draw(this.context)
             }
-        },
-        mounted () {
-            this.canvas = document.getElementById('myCanvas')
-            this.context = this.canvas.getContext('2d')
-
-            this.createStar(true)
-            this.drawFrame()
         }
     }
 </script>
@@ -243,14 +452,16 @@
         background-size: 100%;
         background-image: url("../../../static/image/Starry.png");
         position: relative;
+
         #bgd {
             height: 100vh;
             width: 100vw;
             overflow: hidden;
         }
+
         #loginBox {
-            width: 240px;
-            height: 280px;
+            width: 380px;
+            height: 400px;
             position: absolute;
             top: 0;
             left: 0;
@@ -260,23 +471,66 @@
             padding: 50px 40px 40px 40px;
             box-shadow: -15px 15px 15px rgba(6, 17, 47, 0.7);
             opacity: 1;
-            background: linear-gradient(
-                    230deg,
-                    rgba(53, 57, 74, 0) 0%,
-                    rgb(0, 0, 0) 100%
-            );
+            background: linear-gradient(230deg,
+            rgba(53, 57, 74, 0) 0%,
+            rgb(0, 0, 0) 100%);
+
             /deep/ .inps input {
                 border: none;
                 color: #fff;
                 background-color: transparent;
                 font-size: 12px;
             }
+
             .submitBtn {
                 background-color: transparent;
                 color: #39f;
                 width: 200px;
             }
+            .registerButton {
+                background-color: transparent;
+                color: white;
+                width: 200px;
+            }
             .iconfont {
+                text-align: center;
+                color: #fff;
+            }
+        }
+        #registerBox {
+            width: 400px;
+            height: 550px;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            margin: auto;
+            padding: 50px 40px 40px 40px;
+            box-shadow: -15px 15px 15px rgba(6, 17, 47, 0.7);
+            opacity: 1;
+            background: linear-gradient(230deg,
+            rgba(53, 57, 74, 0) 0%,
+            rgb(0, 0, 0) 100%);
+            /deep/ .inps input {
+                border: none;
+                color: #fff;
+                background-color: transparent;
+                font-size: 12px;
+            }
+
+            .submitBtn {
+                background-color: transparent;
+                color: #39f;
+                width: 200px;
+            }
+            .registerButton {
+                background-color: transparent;
+                color: white;
+                width: 200px;
+            }
+            .iconfont {
+                text-align: center;
                 color: #fff;
             }
         }

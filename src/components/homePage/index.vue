@@ -83,7 +83,7 @@
                             </Menu>
                         </Sider>
                         <Content :style="{padding: '24px', minHeight: '280px', background: '#fff'}">
-                            <file :fileList="fileList" :typeCode="typeCode"></file>
+                            <file ref="files" :fileList="fileList" :typeCode="typeCode" :total="totalFiles"></file>
                         </Content>
                     </Layout>
                 </Content>
@@ -108,7 +108,8 @@
                 fileList: [],
                 pageSize: 5,
                 pageNo: 0,
-                typeCode: 0
+                typeCode: 0,
+                totalFiles: 0
             }
         },
         components: {
@@ -121,6 +122,7 @@
                     this.$refs.typeName.updateActiveName()
                 }
             })
+            // this.getPublicKey()
             // this.loadFile()
         },
         // watch: {
@@ -132,10 +134,17 @@
         //     }
         // },
         methods: {
+            // async getPublicKey () {
+            //     let res = await this.axios.get('/user/getPublicKey')
+            //     this.global.setPublicKey(res.data.publicKey)
+            //     console.log(this.global.publicKey)
+            // },
             doLogin () {
-                console.log(1)
                 this.$router.push({
-                    name: 'register'
+                    name: 'login',
+                    params: {
+                        publicKey: this.publicKey
+                    }
                 })
             },
             showName (name) {
@@ -164,18 +173,18 @@
                 console.log(e[0])
             },
             loadFile () {
-                this.axios.post('/file/getPage', {
+                this.post('/file/getPage', {
                     pageSize: this.pageSize,
                     pageNo: this.pageNo,
                     typeCode: this.typeCode
-                }).then(res => {
-                    this.fileList = res.data
+                }).then((res) => {
+                    console.log(res)
+                    this.fileList = res.data.files
                     this.fileList.forEach(item => {
                         item.createdDate = this.$moment(item.createdDate).format('YYYY-MM-DD HH:mm:ss')
                         item.modifiedDate = this.$moment(item.modifiedDate).format('YYYY-MM-DD HH:mm:ss')
                     })
-                }).catch(error => {
-                    console.log(error)
+                    this.totalFiles = res.data.total
                 })
             }
         }

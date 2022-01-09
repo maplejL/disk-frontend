@@ -62,6 +62,8 @@
 </style>
 
 <script>
+    import {post} from '../../service/axiosSetting'
+
     export default {
         name: 'register',
         data () {
@@ -112,6 +114,9 @@
             handleSubmit (name) {
                 this.$refs[name].validate((valid) => {
                     if (valid) {
+                        post('/user/register', this.formValidate).then(res => {
+                            console.log(res)
+                        })
                         this.$Message.success('提交成功!')
                     } else {
                         this.$Message.error('表单验证失败!')

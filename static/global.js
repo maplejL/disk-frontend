@@ -1,5 +1,7 @@
-const baseURL = 'http://localhost:9999'
-
 export default {
-    baseURL
+    baseURL: 'http://localhost:9999',
+    publicKey: '',
+    setPublicKey (publicKey) {
+        this.publicKey = publicKey
+    }
 }

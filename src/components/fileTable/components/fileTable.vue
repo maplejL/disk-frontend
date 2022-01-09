@@ -9,7 +9,8 @@
 
         <el-table
                 :data="tableData"
-                height="570px"
+                height="500px"
+                :highlight-current-row="true"
                 style="width: 90%"
                 @row-click="toDetail"
         >
@@ -50,6 +51,18 @@
                     prop="createdDate"
                     label="修改时间"
                     width="250px">
+                <template slot-scope="scope" id="popover">
+                    <div>
+                        <el-popover trigger="hover"
+                                    content="这是一段内容,这是一段内容,这是一段内容,这是一段内容。"
+                                    title="标题"
+                                    v-model="isPop">
+                            <div>
+                                ...
+                            </div>
+                        </el-popover>
+                    </div>
+                </template>
             </el-table-column>
             <el-table-column
                     prop="size"
@@ -108,6 +121,7 @@
                 srcList: [],
                 showViewer: 0,
                 isPlay: 0,
+                isPop: true,
                 videoState: false,
                 videoOptions: {
                     autoplay: '', // 自动播放
@@ -132,6 +146,9 @@
             ElImageViewer,
             VideoPlayer,
             video
+        },
+        mounted () {
+            console.log(this.tableData)
         },
         methods: {
             ok () {

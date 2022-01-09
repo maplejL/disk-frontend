@@ -5,10 +5,20 @@
             <fileDetail :data="detail" @play="play" ref="fileDetail"></fileDetail>
         </div>
         <div class="block" style="float: left; position:relative; top: 20px">
+<!--            <el-pagination-->
+<!--                    layout="prev, pager, next"-->
+<!--                    :total="total"-->
+<!--                    :page-size="pageSize"-->
+<!--                    @current-change="handleCurrentChange">-->
+<!--            </el-pagination>-->
             <el-pagination
-                    layout="prev, pager, next"
-                    :total="50"
-                    :page-size="5">
+                    @size-change="handleSizeChange"
+                    @current-change="handleCurrentChange"
+                    :current-page="currentPage"
+                    :page-sizes="[5, 10, 15, 20]"
+                    :page-size="5"
+                    layout="total, sizes, prev, pager, next, jumper"
+                    :total="total">
             </el-pagination>
         </div>
     </div>
@@ -22,7 +32,7 @@
     import fileDetail from './components/fileDetail'
     export default {
         name: 'file',
-        props: ['fileList', 'typeCode'],
+        props: ['fileList', 'typeCode', 'total'],
         components: {
             fileTable,
             fileDetail
@@ -31,7 +41,8 @@
             return {
                 detail: null,
                 pageSize: 5,
-                pageNo: 0
+                pageNo: 0,
+                currentPage: 0
             }
         },
         methods: {
@@ -41,6 +52,15 @@
             },
             play (url) {
                 this.$refs.fileTable.play(url)
+            },
+            handleSizeChange (val) {
+                console.log(`每页 ${val} 条`)
+                this.pageSize = val
+            },
+            handleCurrentChange (val) {
+                this.pageNo = val - 1
+                console.log(`当前页: ${val}`)
+                console.log(this.$refs.files)
             }
         }
     }
