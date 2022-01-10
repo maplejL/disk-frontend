@@ -100,7 +100,7 @@
                 </el-form-item>
                 <el-form-item
                         label=""
-                        prop="passWord"
+                        prop="password"
                 >
                     <el-row>
                         <el-col :span='4'>
@@ -204,6 +204,13 @@
                 stars: [], // 星星数组
                 showLogin: 1,
                 publicKey: '',
+                registerForm: {
+                    username: '',
+                    password: '',
+                    email: '',
+                    city: '',
+                    sex: ''
+                },
                 ruleValidate: {
                     username: [
                         { required: true, message: '姓名不能为空', trigger: 'blur' }
@@ -235,13 +242,6 @@
                     //     { required: true, message: '请输入个人介绍', trigger: 'blur' },
                     //     { type: 'string', min: 20, message: '介绍不能少于20字', trigger: 'blur' }
                     // ]
-                },
-                registerForm: {
-                    username: '',
-                    password: '',
-                    email: '',
-                    city: '',
-                    sex: ''
                 },
                 shadowColorList: [
                     '#39f',
