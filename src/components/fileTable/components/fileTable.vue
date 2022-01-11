@@ -48,20 +48,21 @@
             >
             </el-table-column>
             <el-table-column
-                    prop="createdDate"
+                    prop="modifiedDate"
                     label="修改时间"
                     width="250px">
-                <template slot-scope="scope" id="popover">
-                    <div>
-                        <el-popover trigger="hover"
-                                    content="这是一段内容,这是一段内容,这是一段内容,这是一段内容。"
-                                    title="标题"
-                                    v-model="isPop">
-                            <div>
-                                ...
-                            </div>
-                        </el-popover>
-                    </div>
+                <template slot-scope="scope">
+                    <span v-if="isHover === 0">{{scope.row.modifiedDate}}</span>
+                    <
+<!--                    <el-popover-->
+<!--                            placement="top-start"-->
+<!--                            title="标题"-->
+<!--                            width="200"-->
+<!--                            trigger="hover"-->
+<!--                            content="scope">-->
+<!--                        <el-button   size="mini"-->
+<!--                                     type="text" slot="reference">{{scope.row.modifiedDate}}</el-button>-->
+<!--                    </el-popover>-->
                 </template>
             </el-table-column>
             <el-table-column
@@ -122,6 +123,7 @@
                 showViewer: 0,
                 isPlay: 0,
                 isPop: true,
+                isHover: 0,
                 videoState: false,
                 videoOptions: {
                     autoplay: '', // 自动播放
@@ -147,7 +149,7 @@
             VideoPlayer,
             video
         },
-        mounted () {
+        updated () {
             console.log(this.tableData)
         },
         methods: {

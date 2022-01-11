@@ -18,7 +18,7 @@
             >
                 <el-form-item
                         label=""
-                        prop="userName"
+                        prop="username"
                         style="margin-top:40px;"
                 >
                     <el-row>
@@ -36,7 +36,7 @@
                 </el-form-item>
                 <el-form-item
                         label=""
-                        prop="passWord"
+                        prop="password"
                 >
                     <el-row>
                         <el-col :span='4'>
@@ -75,8 +75,8 @@
         <div v-else id="registerBox">
             <h3>注册</h3>
             <el-form
-                    :model="registerForm"
-                    :rules="ruleValidate"
+                    :model="loginForm"
+                    :rules="loginRules"
                     ref="loginForm"
                     label-width="0px"
             >
@@ -93,7 +93,7 @@
                             <el-input
                                     class="inps"
                                     placeholder='用户名'
-                                    v-model="registerForm.username"
+                                    v-model="loginForm.username"
                             ></el-input>
                         </el-col>
                     </el-row>
@@ -111,7 +111,7 @@
                                     type="password"
                                     class="inps"
                                     placeholder='密码'
-                                    v-model="registerForm.password"
+                                    v-model="loginForm.password"
                             ></el-input>
                         </el-col>
                     </el-row>
@@ -129,7 +129,7 @@
                             <el-input
                                     class="inps"
                                     placeholder='邮箱'
-                                    v-model="registerForm.email"
+                                    v-model="loginForm.email"
                             ></el-input>
                         </el-col>
                     </el-row>
@@ -147,7 +147,7 @@
                             <el-input
                                     class="inps"
                                     placeholder='城市'
-                                    v-model="registerForm.city"
+                                    v-model="loginForm.city"
                             ></el-input>
                         </el-col>
                     </el-row>
@@ -291,13 +291,26 @@
                 result1: null,
                 loginForm: {
                     username: '',
-                    password: ''
+                    password: '',
+                    email: '',
+                    city: '',
+                    sex: ''
                 },
                 loginRules: {
                     username: [
                         {required: true, message: '请输入用户名', trigger: 'blur'}
                     ],
-                    password: [{required: true, message: '请输入密码', trigger: 'blur'}]
+                    password: [{required: true, message: '请输入密码', trigger: 'blur'}],
+                    email: [
+                        { required: true, message: '邮箱不能为空', trigger: 'blur' },
+                        { type: 'email', message: '邮箱格式不正确', trigger: 'blur' }
+                    ],
+                    city: [
+                        { required: true, message: '请选择城市', trigger: 'change' }
+                    ],
+                    sex: [
+                        { required: true, message: '请选择性别', trigger: 'change' }
+                    ]
                 }
             }
         },
@@ -318,7 +331,6 @@
             },
             changeView () {
                 this.showLogin = 0
-                console.log(this.publicKey)
             },
             doRegister () {
                 let encryptor = new JSEncrypt()
