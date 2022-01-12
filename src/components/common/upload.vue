@@ -26,9 +26,7 @@
                         'Content-Type': 'multipart/form-data'
                     }
                 }
-                this.axios.post('/file/upload', formData, config).then(res => {
-                    console.log(res)
-                })
+                this.post('/file/upload', formData, config)
             }
         }
     }

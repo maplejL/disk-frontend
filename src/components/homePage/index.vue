@@ -83,7 +83,10 @@
                             </Menu>
                         </Sider>
                         <Content :style="{padding: '24px', minHeight: '280px', background: '#fff'}">
-                            <file ref="files" :fileList="fileList" :typeCode="typeCode" :total="totalFiles"></file>
+                            <file ref="files"
+                                  :typeCode="typeCode"
+                                  :total="totalFiles"
+                            ></file>
                         </Content>
                     </Layout>
                 </Content>
@@ -107,9 +110,7 @@
                 typeName: null,
                 fileList: [],
                 pageSize: 5,
-                pageNo: 0,
-                typeCode: 0,
-                totalFiles: 0
+                pageNo: 0
             }
         },
         components: {
@@ -171,21 +172,6 @@
             },
             parentTag (e) {
                 console.log(e[0])
-            },
-            loadFile () {
-                this.post('/file/getPage', {
-                    pageSize: this.pageSize,
-                    pageNo: this.pageNo,
-                    typeCode: this.typeCode
-                }).then((res) => {
-                    console.log(res)
-                    this.fileList = res.data.files
-                    this.fileList.forEach(item => {
-                        item.createdDate = this.$moment(item.createdDate).format('YYYY-MM-DD HH:mm:ss')
-                        item.modifiedDate = this.$moment(item.modifiedDate).format('YYYY-MM-DD HH:mm:ss')
-                    })
-                    this.totalFiles = res.data.total
-                })
             }
         }
     }

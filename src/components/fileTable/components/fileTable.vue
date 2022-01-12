@@ -13,6 +13,8 @@
                 :highlight-current-row="true"
                 style="width: 90%"
                 @row-click="toDetail"
+                @cell-mouse-enter="cellMouseEnter"
+                @cell-mouse-leave="cellMouseLeave"
         >
             <el-table-column
                     type="selection"
@@ -50,19 +52,12 @@
             <el-table-column
                     prop="modifiedDate"
                     label="修改时间"
-                    width="250px">
+                    width="150px">
+            </el-table-column>
+            <el-table-column>
+<!--                <span v-show="isHover === 1">123</span>-->
                 <template slot-scope="scope">
-                    <span v-if="isHover === 0">{{scope.row.modifiedDate}}</span>
-                    <
-<!--                    <el-popover-->
-<!--                            placement="top-start"-->
-<!--                            title="标题"-->
-<!--                            width="200"-->
-<!--                            trigger="hover"-->
-<!--                            content="scope">-->
-<!--                        <el-button   size="mini"-->
-<!--                                     type="text" slot="reference">{{scope.row.modifiedDate}}</el-button>-->
-<!--                    </el-popover>-->
+                    <el-button v-show="scope.row.hoverFlag" type="primary">123</el-button>
                 </template>
             </el-table-column>
             <el-table-column
@@ -153,6 +148,32 @@
             console.log(this.tableData)
         },
         methods: {
+            cellMouseEnter (row, column, cell, event) {
+                let Arr = JSON.parse(JSON.stringify(this.tableData))
+                for (let index = 0; index < Arr.length; index++) {
+                    const element = Arr[index]
+                    if (element.id === row.id) {
+                        element['hoverFlag'] = true
+                    } else {
+                        element['hoverFlag'] = false
+                    }
+                }
+                this.tableData = JSON.parse(JSON.stringify(Arr))
+            },
+            cellMouseLeave () {
+                // 移除hover的事件
+                for (let index = 0; index < this.tableData.length; index++) {
+                    const element = this.tableData[index]
+                    element['isHover'] = false
+                }
+            },
+            download (url) {
+                this.get('/file/download', {
+                    url: url
+                }).then(res => {
+                    console.log(res)
+                })
+            },
             ok () {
                 this.$Message.info('点击了确定')
             },

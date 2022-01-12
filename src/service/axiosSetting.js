@@ -55,6 +55,12 @@ instance.interceptors.response.use(response => {
             localStorage.setItem('userInfo', JSON.stringify(response.data.data.userInfo))
             localStorage.setItem('token', JSON.stringify(response.data.data.token))
         }
+        if (response.config.url === '/file/upload') {
+            Message({
+                message: '上传成功,请刷新页面',
+                type: 'success'
+            })
+        }
         console.log(response)
         return response
     } else {
