@@ -5,7 +5,7 @@
                 :http-request="upload"
                 action="string"
                 :show-file-list="false">
-            <el-button size="small" type="primary">点击上传</el-button>
+            <el-button size="small" type="primary">{{textList[typeCode-1]}}</el-button>
         </el-upload>
     </div>
 </template>
@@ -14,6 +14,11 @@
     export default {
         name: 'upload',
         props: ['typeCode'],
+        data () {
+            return {
+                textList: ['上传视频', '上传文档', '上传音乐', '上传图片']
+            }
+        },
         methods: {
             upload (val) {
                 console.log(val)

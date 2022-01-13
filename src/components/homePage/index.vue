@@ -1,25 +1,11 @@
-<!--                                <Submenu v-for="(item, i) in menu" v-bind:key="i" :name="item.name">-->
-<!--                                    <template slot="title">-->
-<!--                                        <Icon :type="item.icon"></Icon>-->
-<!--                                        {{ item.name }}-->
-<!--                                    </template>-->
-<!--                                    <MenuItem v-for="(group, i) in item.groups" v-bind:key="i">-->
-<!--                                        {{group.name}}-->
-<!--&lt;!&ndash;                                        <template slot="title">&ndash;&gt;-->
-<!--&lt;!&ndash;                                                                                    <Icon :type="group.icon"></Icon>&ndash;&gt;-->
-<!--&lt;!&ndash;                                            {{ group.name }}&ndash;&gt;-->
-<!--&lt;!&ndash;                                        </template>&ndash;&gt;-->
-<!--&lt;!&ndash;                                        <MenuItem :name="group.name">&ndash;&gt;-->
-
-<!--&lt;!&ndash;                                        </MenuItem>&ndash;&gt;-->
-<!--                                    </MenuItem>-->
-<!--                                </Submenu>-->
 <template>
     <div class="layout">
         <Layout>
             <Header>
                 <Menu mode="horizontal" theme="dark" active-name="1">
-                    <div class="layout-logo"></div>
+                    <div>
+                        <img src="static/image/logo.png" style="height: 60px;width: 200px;float: left">
+                    </div>
                     <div class="layout-nav">
                         <MenuItem name="1" @click.native="doLogin">
                             <Icon type="ios-navigate"></Icon>
@@ -41,10 +27,8 @@
                 </Menu>
             </Header>
             <Layout :style="{padding: '0 20px'}">
-                <Breadcrumb :style="{margin: '16px 0'}">
-                    <BreadcrumbItem>Home</BreadcrumbItem>
-                    <BreadcrumbItem>Components</BreadcrumbItem>
-                    <BreadcrumbItem>Layout</BreadcrumbItem>
+                <Breadcrumb :style="{margin: '16px 0'}" v-for="(item,index) in breads" :key=index>
+                    <Breadcrumb.Item :style="{width: '50px'}">{{item}}</Breadcrumb.Item>
                 </Breadcrumb>
                 <Content :style="{padding: '24px 0', minHeight: '280px', background: '#fff'}">
                     <Layout v-model="name">
@@ -53,7 +37,6 @@
                                   @on-select="changeType" :accordion="true" @on-open-change="parentTag"
                                   ref="typeName"
                             >
-
                                 <Submenu name="全部文件">
                                     <template slot="title">
                                         <Icon type="ios-navigate"></Icon>
@@ -84,9 +67,12 @@
                         </Sider>
                         <Content :style="{padding: '24px', minHeight: '280px', background: '#fff'}">
                             <file ref="files"
+                                  :fileList="fileList"
                                   :typeCode="typeCode"
                                   :total="totalFiles"
-                            ></file>
+                                  @changePage="changePage"
+                                  @loadFile="loadFile"></file>
+                            <rubbish></rubbish>
                         </Content>
                     </Layout>
                 </Content>
@@ -110,7 +96,10 @@
                 typeName: null,
                 fileList: [],
                 pageSize: 5,
-                pageNo: 0
+                pageNo: 0,
+                typeCode: 1,
+                totalFiles: 0,
+                breads: ['首页']
             }
         },
         components: {
@@ -123,8 +112,16 @@
                     this.$refs.typeName.updateActiveName()
                 }
             })
+            if ('WebSocket' in window) {
+                this.initWebSocket()
+            } else {
+                alert('Not support websocket')
+            }
             // this.getPublicKey()
             // this.loadFile()
+        },
+        destroyed: function () { // 离开页面生命周期函数
+            this.websocketclose()
         },
         // watch: {
         //     $route: {
@@ -135,11 +132,33 @@
         //     }
         // },
         methods: {
-            // async getPublicKey () {
-            //     let res = await this.axios.get('/user/getPublicKey')
-            //     this.global.setPublicKey(res.data.publicKey)
-            //     console.log(this.global.publicKey)
-            // },
+            initWebSocket () {
+                // WebSocket与普通的请求所用协议有所不同，ws等同于http，wss等同于https
+                this.websock = new WebSocket('ws://localhost:9999/websocket/121')
+                this.websock.onopen = this.websocketonopen
+                this.websock.onerror = this.websocketonerror
+                this.websock.onmessage = this.websocketonmessage
+                this.websock.onclose = this.websocketclose
+            },
+            websocketonopen () {
+                console.log('WebSocket连接成功')
+            },
+            websocketonerror (e) {
+                console.log('WebSocket连接发生错误')
+            },
+            websocketonmessage (e) {
+                var da = JSON.parse(e.data)
+                console.log(da)
+                this.message = da
+            },
+            websocketclose (e) {
+                console.log('connection closed (' + e.code + ')')
+            },
+            changePage (pageSize, pageNo) {
+                this.pageSize = pageSize
+                this.pageNo = pageNo
+                this.loadFile()
+            },
             doLogin () {
                 this.$router.push({
                     name: 'login',
@@ -157,6 +176,7 @@
                 switch (this.typeName) {
                 case '视频':
                     this.typeCode = 1
+                    this.breads.push('视频')
                     break
                 case '文档':
                     this.typeCode = 2
@@ -172,6 +192,21 @@
             },
             parentTag (e) {
                 console.log(e[0])
+            },
+            loadFile () {
+                this.post('/file/getPage', {
+                    pageSize: this.pageSize,
+                    pageNo: this.pageNo,
+                    typeCode: this.typeCode
+                }).then((res) => {
+                    console.log(res)
+                    this.fileList = res.data.files
+                    this.fileList.forEach(item => {
+                        item.createdDate = this.$moment(item.createdDate).format('YYYY-MM-DD HH:mm:ss')
+                        item.modifiedDate = this.$moment(item.modifiedDate).format('YYYY-MM-DD HH:mm:ss')
+                    })
+                    this.totalFiles = res.data.total
+                })
             }
         }
     }

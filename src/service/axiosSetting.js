@@ -23,9 +23,15 @@ instance.defaults.headers.post['Content-Type'] = 'application/json'
 /** 添加请求拦截器 **/
 instance.interceptors.request.use(config => {
     config.headers['token'] = JSON.parse(localStorage.getItem('token')) || ''
-    loadingInstance = Loading.service({ // 发起请求时加载全局loading，请求失败或有响应时会关闭
-        text: '拼命加载中...'
-    })
+    if (config.url.includes('/file/download')) {
+        loadingInstance = Loading.service({
+            text: '下载中...'
+        })
+    } else {
+        loadingInstance = Loading.service({ // 发起请求时加载全局loading，请求失败或有响应时会关闭
+            text: '拼命加载中...'
+        })
+    }
     // // 在这里：可以根据业务需求可以在发送请求之前做些什么:例如我这个是导出文件的接口，因为返回的是二进制流，所以需要设置请求响应类型为blob，就可以在此处设置。
     // if (config.url.includes('pur/contract/export')) {
     //     config.headers['responseType'] = 'blob'
@@ -61,7 +67,6 @@ instance.interceptors.response.use(response => {
                 type: 'success'
             })
         }
-        console.log(response)
         return response
     } else {
         Message({
@@ -72,7 +77,6 @@ instance.interceptors.response.use(response => {
     }
 }, error => {
     loadingInstance.close()
-    console.log(error.response)
     if (error.response) {
         // 根据请求失败的http状态码去给用户相应的提示
         // let tips = error.response.status in httpCode ? httpCode[error.response.status] : error.response.data.message
@@ -103,6 +107,40 @@ export const get = (url, params, config = {}) => {
             method: 'get',
             url,
             params,
+            ...config
+        }).then(response => {
+            console.log(response)
+            resolve(response)
+        }).catch(error => {
+            reject(error)
+        })
+    })
+}
+
+/* 统一封装put请求 */
+export const put = (url, data, config = {}) => {
+    return new Promise((resolve, reject) => {
+        instance({
+            method: 'put',
+            url,
+            data,
+            ...config
+        }).then(response => {
+            console.log(response)
+            resolve(response)
+        }).catch(error => {
+            reject(error)
+        })
+    })
+}
+
+/* 统一封装delete请求 */
+export const myDelete = (url, data, config = {}) => {
+    return new Promise((resolve, reject) => {
+        instance({
+            method: 'delete',
+            url,
+            data,
             ...config
         }).then(response => {
             console.log(response)

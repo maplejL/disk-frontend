@@ -1,6 +1,18 @@
 <template>
     <div style="float: left">
-        <upload :typeCode="typeCode"></upload>
+        <table>
+            <tr>
+                <td>
+                    <upload :typeCode="typeCode"></upload>
+                </td>
+                <td style="position: relative">
+                    <el-button size="small"
+                               type="danger"
+                               style="position: absolute;top: 0px;margin-left: 15px"
+                               @click="deleteFile">批量删除</el-button>
+                </td>
+            </tr>
+        </table>
         <!--        <video v-show = "isPlay === 1"></video>-->
         <div class='mask' v-if='isPlay == 1' @click='masksCloseFun'></div>
         <div class="videomasks" v-if="isPlay == 1">
@@ -15,6 +27,8 @@
                 @row-click="toDetail"
                 @cell-mouse-enter="cellMouseEnter"
                 @cell-mouse-leave="cellMouseLeave"
+                @select="selectRow"
+                @select-all="selectAll"
         >
             <el-table-column
                     type="selection"
@@ -25,13 +39,13 @@
                     <el-image v-if="scope.row.typeCode !== 1"
                               :src="scope.row.url"
                               @click="setSrc(scope.row.url, scope.row.typeCode)"
-                              style="height: 50px"
+                              style="height: 50px;cursor: pointer;"
                               fit="scale-down"
                     >
                     </el-image>
                     <el-image v-else
                               :src="scope.row.thumbnailName"
-                              style="height: 50px"
+                              style="height: 50px;cursor: pointer;"
                               @click="setSrc(scope.row.url, scope.row.typeCode)"
                     >
                     </el-image>
@@ -48,16 +62,49 @@
                     width="500px"
                     :show-overflow-tooltip="true"
             >
+                <template slot-scope="scope">
+                    <div v-if="scope.row.id === refactorId">
+                        <el-input
+                                type="text"
+                                v-model="refactorData.fileName"
+                                style="width: 360px"
+                        ></el-input>
+                        <button class="refactor" @click="refactorFile">
+                            <i class="el-icon-check" />
+                        </button>
+                        <button class="refactor" @click="refactorId = null">
+                            <i class="el-icon-close" />
+                        </button>
+                    </div>
+                    <span v-else style="cursor: pointer"
+                          @click="setSrc(scope.row.url, scope.row.typeCode)"
+                    >{{scope.row.fileName}}</span>
+                </template>
             </el-table-column>
             <el-table-column
                     prop="modifiedDate"
                     label="修改时间"
                     width="150px">
             </el-table-column>
-            <el-table-column>
-<!--                <span v-show="isHover === 1">123</span>-->
+            <el-table-column width="100px">
+                <!--                <span v-show="isHover === 1">123</span>-->
                 <template slot-scope="scope">
-                    <el-button v-show="scope.row.hoverFlag" type="primary">123</el-button>
+                    <div v-show="scope.row.id === hoverId">
+                        <i class="el-icon-share" v-bind:title="share"></i>
+                        <i class="el-icon-download" @click="download(scope.row.url)" v-bind:title="down"></i>
+                        <el-dropdown trigger="click" placement="bottom" @command="handleCommand">
+                            <span class="el-dropdown-link">
+                                <i class="el-icon-more" v-bind:title="more"></i>
+                            </span>
+                            <el-dropdown-menu slot="dropdown">
+                                <el-dropdown-item command="move">移动到</el-dropdown-item>
+                                <el-dropdown-item command="refactor">重命名</el-dropdown-item>
+                                <el-dropdown-item command="copy">复制到</el-dropdown-item>
+                                <el-dropdown-item command="delete">删除</el-dropdown-item>
+                            </el-dropdown-menu>
+                        </el-dropdown>
+                    </div>
+                    <!--                    <el-button v-show="scope.row.hoverFlag" type="primary">123</el-button>-->
                 </template>
             </el-table-column>
             <el-table-column
@@ -72,6 +119,31 @@
 <style scoped lang="less">
     /deep/ .el-image-viewer__wrapper {
         height: 50%;
+    }
+
+    /deep/ .el-icon-more {
+        color: #2baee9;
+        cursor: pointer;
+    }
+
+    /deep/ .el-icon-share {
+        color: #2baee9;
+        margin-right: 10px;
+        cursor: pointer;
+    }
+
+    /deep/ .el-icon-download {
+        color: #2baee9;
+        margin-right: 10px;
+        cursor: pointer;
+    }
+
+    .refactor {
+        width: 38px;
+        height: 38px;
+        background-color: white;
+        border: 0px;
+        cursor: pointer;
     }
 
     .video {
@@ -119,7 +191,16 @@
                 isPlay: 0,
                 isPop: true,
                 isHover: 0,
+                share: '分享',
+                down: '下载',
+                more: '更多',
                 videoState: false,
+                isSelect: 0,
+                hoverId: null,
+                hoverData: null,
+                refactorId: null,
+                deleteOne: 0,
+                refactorData: null,
                 videoOptions: {
                     autoplay: '', // 自动播放
                     controls: true, // 用户可以与之交互的控件
@@ -135,7 +216,8 @@
                             type: 'video/mp4'
                         }
                     ]
-                }
+                },
+                selectedIds: []
             }
         },
         components: {
@@ -144,28 +226,73 @@
             VideoPlayer,
             video
         },
-        updated () {
-            console.log(this.tableData)
-        },
         methods: {
-            cellMouseEnter (row, column, cell, event) {
-                let Arr = JSON.parse(JSON.stringify(this.tableData))
-                for (let index = 0; index < Arr.length; index++) {
-                    const element = Arr[index]
+            async refactorFile () {
+                this.refactorId = null
+                await this.put('/file/refactorFile', this.refactorData).then(res => [
+                    this.loadFile()
+                ])
+                this.$message.success('重命名成功')
+            },
+            selectAll () {
+                this.selectedIds = []
+                for (let i = 0; i < this.tableData.length; i++) {
+                    this.selectedIds.push(this.tableData[i].id)
+                }
+            },
+            selectRow (selection) {
+                // this.isSelect = 1
+                console.log(selection)
+                this.selectedIds = []
+                for (let i = 0; i < selection.length; i++) {
+                    this.selectedIds.push(selection[i].id)
+                }
+            },
+            async cellMouseEnter (row, column, cell, event) {
+                let res = await this.compare(row)
+                this.hoverId = res.id
+                this.hoverData = res
+            },
+            compare (row) {
+                for (let index = 0; index < this.tableData.length; index++) {
+                    const element = this.tableData[index]
                     if (element.id === row.id) {
-                        element['hoverFlag'] = true
-                    } else {
-                        element['hoverFlag'] = false
+                        return row
                     }
                 }
-                this.tableData = JSON.parse(JSON.stringify(Arr))
+            },
+            handleCommand (command) {
+                switch (command) {
+                case 'delete':
+                    this.deleteOne = 1
+                    this.deleteFile()
+                    break
+                case 'refactor':
+                    this.refactorId = this.hoverData.id
+                    this.refactorData = this.hoverData
+
+                    break
+                }
             },
             cellMouseLeave () {
                 // 移除hover的事件
-                for (let index = 0; index < this.tableData.length; index++) {
-                    const element = this.tableData[index]
-                    element['isHover'] = false
+                this.hoverId = null
+            },
+            loadFile () {
+                this.$emit('loadFile')
+            },
+            async deleteFile () {
+                let ids = []
+                if (this.deleteOne === 1) {
+                    ids.push(this.hoverData.id)
+                } else {
+                    ids = this.selectedIds
                 }
+                await this.myDelete('/file/deleteFile', {ids: ids})
+                    .then(res => {
+                        this.loadFile()
+                    })
+                this.$message.success('删除成功')
             },
             download (url) {
                 this.get('/file/download', {

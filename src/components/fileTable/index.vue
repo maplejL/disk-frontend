@@ -1,16 +1,15 @@
 <template>
     <div>
-        <fileTable :tableData="fileList" :typeCode="typeCode" class="fileTable" @toDetail="toDetail" ref="fileTable"></fileTable>
+        <fileTable :tableData="fileList"
+                   :typeCode="typeCode"
+                   class="fileTable"
+                   @toDetail="toDetail"
+                   ref="fileTable"
+                   @loadFile="loadFile"></fileTable>
         <div class="detail">
             <fileDetail :data="detail" @play="play" ref="fileDetail"></fileDetail>
         </div>
         <div class="block" style="float: left; position:relative; top: 20px">
-<!--            <el-pagination-->
-<!--                    layout="prev, pager, next"-->
-<!--                    :total="total"-->
-<!--                    :page-size="pageSize"-->
-<!--                    @current-change="handleCurrentChange">-->
-<!--            </el-pagination>-->
             <el-pagination
                     @size-change="handleSizeChange"
                     @current-change="handleCurrentChange"
@@ -18,7 +17,7 @@
                     :page-sizes="[5, 10, 15, 20]"
                     :page-size="5"
                     layout="total, sizes, prev, pager, next, jumper"
-                    :total="totalFiles">
+                    :total="total">
             </el-pagination>
         </div>
     </div>
@@ -32,7 +31,7 @@
     import fileDetail from './components/fileDetail'
     export default {
         name: 'file',
-        // props: ['fileList', 'typeCode', 'total'],
+        props: ['fileList', 'typeCode', 'total'],
         components: {
             fileTable,
             fileDetail
@@ -42,44 +41,15 @@
                 detail: null,
                 pageSize: 5,
                 pageNo: 0,
-                fileList: [],
-                currentPage: 0,
-                typeCode: 0,
-                totalFiles: 0
+                currentPage: 0
             }
-        },
-        created () {
-            this.$nextTick(() => {
-                if (this.$route.query.typeName) {
-                    this.typeName = this.$route.query.typeName
-                    this.$refs.typeName.updateActiveName()
-                }
-            })
-            // this.getPublicKey()
-            // this.loadFile()
         },
         mounted () {
             this.loadFile()
         },
         methods: {
-            changeType (e) {
-                this.$route.query.typeName = e
-                this.typeName = e
-                switch (this.typeName) {
-                case '视频':
-                    this.typeCode = 1
-                    break
-                case '文档':
-                    this.typeCode = 2
-                    break
-                case '音乐':
-                    this.typeCode = 3
-                    break
-                case '图片':
-                    this.typeCode = 4
-                    break
-                }
-                this.loadFile()
+            cellMouseEnter (row) {
+                this.$emit('cellMouseEnter', row)
             },
             toDetail (val) {
                 this.detail = val
@@ -103,19 +73,7 @@
                 this.loadFile()
             },
             loadFile () {
-                this.post('/file/getPage', {
-                    pageSize: this.pageSize,
-                    pageNo: this.pageNo,
-                    typeCode: this.typeCode
-                }).then((res) => {
-                    console.log(res)
-                    this.fileList = res.data.files
-                    this.fileList.forEach(item => {
-                        item.createdDate = this.$moment(item.createdDate).format('YYYY-MM-DD HH:mm:ss')
-                        item.modifiedDate = this.$moment(item.modifiedDate).format('YYYY-MM-DD HH:mm:ss')
-                    })
-                    this.totalFiles = res.data.total
-                })
+                this.$emit('loadFile')
             }
         }
     }
