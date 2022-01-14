@@ -99,7 +99,10 @@
                 pageNo: 0,
                 typeCode: 1,
                 totalFiles: 0,
-                breads: ['首页']
+                breads: ['首页'],
+                stompClient: '',
+                timer: '',
+                shopId: '1'
             }
         },
         components: {
@@ -112,16 +115,9 @@
                     this.$refs.typeName.updateActiveName()
                 }
             })
-            if ('WebSocket' in window) {
-                this.initWebSocket()
-            } else {
-                alert('Not support websocket')
-            }
+            this.initWebSocket()
             // this.getPublicKey()
             // this.loadFile()
-        },
-        destroyed: function () { // 离开页面生命周期函数
-            this.websocketclose()
         },
         // watch: {
         //     $route: {
@@ -132,9 +128,17 @@
         //     }
         // },
         methods: {
+            collapse: function () {
+                this.isCollapse = !this.isCollapse
+                if (this.isCollapse) {
+                    this.iconClass = 'cebianlanzhankai'
+                } else {
+                    this.iconClass = 'cebianlanshouhui'
+                }
+            },
             initWebSocket () {
                 // WebSocket与普通的请求所用协议有所不同，ws等同于http，wss等同于https
-                this.websock = new WebSocket('ws://localhost:9999/websocket/121')
+                this.websock = new WebSocket('ws://10.168.253.80:8080/api/websocket/' + this.shopId)
                 this.websock.onopen = this.websocketonopen
                 this.websock.onerror = this.websocketonerror
                 this.websock.onmessage = this.websocketonmessage
@@ -154,6 +158,49 @@
             websocketclose (e) {
                 console.log('connection closed (' + e.code + ')')
             },
+            // initWebSocket () {
+            //     this.connection()
+            //     let that = this
+            //     // 断开重连机制,尝试发送消息,捕获异常发生时重连
+            //     this.timer = setInterval(() => {
+            //         try {
+            //             that.stompClient.send('test')
+            //         } catch (err) {
+            //             console.log('断线了: ' + err)
+            //             that.connection()
+            //         }
+            //     }, 5000)
+            // },
+            // connection () {
+            //     // 建立连接对象
+            //     let socket = new SockJS('http://localhost:8080/api/websocket/1')
+            //     // 获取STOMP子协议的客户端对象
+            //     this.stompClient = Stomp.over(socket)
+            //     // 定义客户端的认证信息,按需求配置
+            //     let headers = {
+            //         Authorization: ''
+            //     }
+            //     // 向服务器发起websocket连接
+            //     this.stompClient.connect(headers, () => {
+            //         this.stompClient.subscribe('/topic/public', (msg) => { // 订阅服务端提供的某个topic
+            //             console.log('广播成功')
+            //             console.log(msg) // msg.body存放的是服务端发送给我们的信息
+            //         }, headers)
+            //         this.stompClient.send('/app/chat.addUser',
+            //                               headers,
+            //                               JSON.stringify({sender: '', chatType: 'JOIN'})
+            //         ) // 用户加入接口
+            //     }, (err) => {
+            //         // 连接发生错误时的处理函数
+            //         console.log('失败')
+            //         console.log(err)
+            //     })
+            // }, // 连接 后台
+            // disconnect () {
+            //     if (this.stompClient) {
+            //         this.stompClient.disconnect()
+            //     }
+            // }, // 断开连接
             changePage (pageSize, pageNo) {
                 this.pageSize = pageSize
                 this.pageNo = pageNo
