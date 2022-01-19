@@ -20,13 +20,15 @@
     "moment": "^2.29.1",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
+    "socket.io": "^4.4.1",
     "sockjs-client": "^1.5.2",
     "stompjs": "^2.3.3",
     "v-viewer": "^1.6.4",
     "view-design": "^4.7.0-beta.11",
     "vue": "^2.5.2",
     "vue-file-upload": "^0.1.12",
-    "vue-router": "^3.0.1"
+    "vue-router": "^3.0.1",
+    "vue-socket.io": "^3.0.10"
   },
   "devDependencies": {
     "autoprefixer": "^7.1.2",

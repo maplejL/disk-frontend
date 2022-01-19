@@ -13,7 +13,7 @@
                         </MenuItem>
                         <MenuItem name="2">
                             <Icon type="ios-keypad"></Icon>
-                            Item 2
+                            <el-button type="primary" size="middle" @click="testSocket">测试socket</el-button>
                         </MenuItem>
                         <MenuItem name="3">
                             <Icon type="ios-analytics"></Icon>
@@ -86,7 +86,6 @@
 </style>
 <script>
     import file from '../fileTable/index'
-
     export default {
         name: 'homePage',
         data () {
@@ -102,7 +101,7 @@
                 breads: ['首页'],
                 stompClient: '',
                 timer: '',
-                shopId: '1'
+                shopId: '1',
             }
         },
         components: {
@@ -128,6 +127,10 @@
         //     }
         // },
         methods: {
+            testSocket () {
+                this.get('/test/sendAllWebSocket')
+                console.log(this.socket)
+            },
             collapse: function () {
                 this.isCollapse = !this.isCollapse
                 if (this.isCollapse) {
@@ -136,71 +139,28 @@
                     this.iconClass = 'cebianlanshouhui'
                 }
             },
-            initWebSocket () {
+            initWebSocket: function () {
                 // WebSocket与普通的请求所用协议有所不同，ws等同于http，wss等同于https
-                this.websock = new WebSocket('ws://10.168.253.80:8080/api/websocket/' + this.shopId)
+                this.websock = new WebSocket('ws://localhost:9999/websocket/DPS007')
                 this.websock.onopen = this.websocketonopen
                 this.websock.onerror = this.websocketonerror
                 this.websock.onmessage = this.websocketonmessage
                 this.websock.onclose = this.websocketclose
             },
-            websocketonopen () {
+            websocketonopen: function () {
                 console.log('WebSocket连接成功')
             },
-            websocketonerror (e) {
+            websocketonerror: function (e) {
                 console.log('WebSocket连接发生错误')
             },
-            websocketonmessage (e) {
+            websocketonmessage: function (e) {
                 var da = JSON.parse(e.data)
                 console.log(da)
                 this.message = da
             },
-            websocketclose (e) {
+            websocketclose: function (e) {
                 console.log('connection closed (' + e.code + ')')
             },
-            // initWebSocket () {
-            //     this.connection()
-            //     let that = this
-            //     // 断开重连机制,尝试发送消息,捕获异常发生时重连
-            //     this.timer = setInterval(() => {
-            //         try {
-            //             that.stompClient.send('test')
-            //         } catch (err) {
-            //             console.log('断线了: ' + err)
-            //             that.connection()
-            //         }
-            //     }, 5000)
-            // },
-            // connection () {
-            //     // 建立连接对象
-            //     let socket = new SockJS('http://localhost:8080/api/websocket/1')
-            //     // 获取STOMP子协议的客户端对象
-            //     this.stompClient = Stomp.over(socket)
-            //     // 定义客户端的认证信息,按需求配置
-            //     let headers = {
-            //         Authorization: ''
-            //     }
-            //     // 向服务器发起websocket连接
-            //     this.stompClient.connect(headers, () => {
-            //         this.stompClient.subscribe('/topic/public', (msg) => { // 订阅服务端提供的某个topic
-            //             console.log('广播成功')
-            //             console.log(msg) // msg.body存放的是服务端发送给我们的信息
-            //         }, headers)
-            //         this.stompClient.send('/app/chat.addUser',
-            //                               headers,
-            //                               JSON.stringify({sender: '', chatType: 'JOIN'})
-            //         ) // 用户加入接口
-            //     }, (err) => {
-            //         // 连接发生错误时的处理函数
-            //         console.log('失败')
-            //         console.log(err)
-            //     })
-            // }, // 连接 后台
-            // disconnect () {
-            //     if (this.stompClient) {
-            //         this.stompClient.disconnect()
-            //     }
-            // }, // 断开连接
             changePage (pageSize, pageNo) {
                 this.pageSize = pageSize
                 this.pageNo = pageNo
