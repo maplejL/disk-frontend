@@ -1,118 +1,125 @@
 <template>
-    <div style="float: left">
-        <table>
-            <tr>
-                <td>
-                    <upload :typeCode="typeCode"></upload>
-                </td>
-                <td style="position: relative">
-                    <el-button size="small"
-                               type="danger"
-                               style="position: absolute;top: 0px;margin-left: 15px"
-                               @click="deleteFile">批量删除</el-button>
-                </td>
-            </tr>
-        </table>
-        <!--        <video v-show = "isPlay === 1"></video>-->
-        <div class='mask' v-if='isPlay == 1' @click='masksCloseFun'></div>
-        <div class="videomasks" v-if="isPlay == 1">
-            <VideoPlayer :options="videoOptions" class="video"></VideoPlayer>
+    <div>
+        <div v-if="typeCode === 0">
+            <ul class="infinite-list" v-infinite-scroll="load" style="overflow:auto">
+                <li v-for="i in count" class="infinite-list-item" :key="i">{{ i }}</li>
+            </ul>
         </div>
+        <div style="float: left" v-if="typeCode !== 0">
+            <table>
+                <tr>
+                    <td>
+                        <upload :typeCode="typeCode"></upload>
+                    </td>
+                    <td style="position: relative">
+                        <el-button size="small"
+                                   type="danger"
+                                   style="position: absolute;top: 0px;margin-left: 15px"
+                                   @click="deleteFile">批量删除</el-button>
+                    </td>
+                </tr>
+            </table>
+            <!--        <video v-show = "isPlay === 1"></video>-->
+            <div class='mask' v-if='isPlay == 1' @click='masksCloseFun'></div>
+            <div class="videomasks" v-if="isPlay == 1">
+                <VideoPlayer :options="videoOptions" class="video"></VideoPlayer>
+            </div>
 
-        <el-table
-                :data="tableData"
-                height="500px"
-                :highlight-current-row="true"
-                style="width: 90%"
-                @row-click="toDetail"
-                @cell-mouse-enter="cellMouseEnter"
-                @cell-mouse-leave="cellMouseLeave"
-                @select="selectRow"
-                @select-all="selectAll"
-        >
-            <el-table-column
-                    type="selection"
-                    width="55">
-            </el-table-column>
-            <el-table-column width="70px" v-viewer.static="{inline: true}">
-                <template slot-scope="scope">
-                    <el-image v-if="scope.row.typeCode !== 1"
-                              :src="scope.row.url"
-                              @click="setSrc(scope.row.url, scope.row.typeCode)"
-                              style="height: 50px;cursor: pointer;"
-                              fit="scale-down"
-                    >
-                    </el-image>
-                    <el-image v-else
-                              :src="scope.row.thumbnailName"
-                              style="height: 50px;cursor: pointer;"
-                              @click="setSrc(scope.row.url, scope.row.typeCode)"
-                    >
-                    </el-image>
-                    <el-image-viewer
-                            v-if="showViewer === 1"
-                            style="transform: scale(1) rotate(0deg); margin: auto; max-height: 70%; max-width: 70%;"
-                            :on-close="closeViewer"
-                            :url-list="srcList"/>
-                </template>
-            </el-table-column>
-            <el-table-column
-                    label="文件名"
-                    prop="fileName"
-                    width="500px"
-                    :show-overflow-tooltip="true"
+            <el-table
+                    :data="tableData"
+                    height="500px"
+                    :highlight-current-row="true"
+                    style="width: 90%"
+                    @row-click="toDetail"
+                    @cell-mouse-enter="cellMouseEnter"
+                    @cell-mouse-leave="cellMouseLeave"
+                    @select="selectRow"
+                    @select-all="selectAll"
             >
-                <template slot-scope="scope">
-                    <div v-if="scope.row.id === refactorId">
-                        <el-input
-                                type="text"
-                                v-model="refactorData.fileName"
-                                style="width: 360px"
-                        ></el-input>
-                        <button class="refactor" @click="refactorFile">
-                            <i class="el-icon-check" />
-                        </button>
-                        <button class="refactor" @click="refactorId = null">
-                            <i class="el-icon-close" />
-                        </button>
-                    </div>
-                    <span v-else style="cursor: pointer"
-                          @click="setSrc(scope.row.url, scope.row.typeCode)"
-                    >{{scope.row.fileName}}</span>
-                </template>
-            </el-table-column>
-            <el-table-column
-                    prop="modifiedDate"
-                    label="修改时间"
-                    width="150px">
-            </el-table-column>
-            <el-table-column width="100px">
-                <!--                <span v-show="isHover === 1">123</span>-->
-                <template slot-scope="scope">
-                    <div v-show="scope.row.id === hoverId">
-                        <i class="el-icon-share" v-bind:title="share"></i>
-                        <i class="el-icon-download" @click="download(scope.row.url)" v-bind:title="down"></i>
-                        <el-dropdown trigger="click" placement="bottom" @command="handleCommand">
+                <el-table-column
+                        type="selection"
+                        width="55">
+                </el-table-column>
+                <el-table-column width="70px" v-viewer.static="{inline: true}">
+                    <template slot-scope="scope">
+                        <el-image v-if="scope.row.typeCode !== 1"
+                                  :src="scope.row.url"
+                                  @click="setSrc(scope.row.url, scope.row.typeCode)"
+                                  style="height: 50px;cursor: pointer;"
+                                  fit="scale-down"
+                        >
+                        </el-image>
+                        <el-image v-else
+                                  :src="scope.row.thumbnailName"
+                                  style="height: 50px;cursor: pointer;"
+                                  @click="setSrc(scope.row.url, scope.row.typeCode)"
+                        >
+                        </el-image>
+                        <el-image-viewer
+                                v-if="showViewer === 1"
+                                style="transform: scale(1) rotate(0deg); margin: auto; max-height: 70%; max-width: 70%;"
+                                :on-close="closeViewer"
+                                :url-list="srcList"/>
+                    </template>
+                </el-table-column>
+                <el-table-column
+                        label="文件名"
+                        prop="fileName"
+                        width="500px"
+                        :show-overflow-tooltip="true"
+                >
+                    <template slot-scope="scope">
+                        <div v-if="scope.row.id === refactorId">
+                            <el-input
+                                    type="text"
+                                    v-model="refactorData.fileName"
+                                    style="width: 360px"
+                            ></el-input>
+                            <button class="refactor" @click="refactorFile">
+                                <i class="el-icon-check" />
+                            </button>
+                            <button class="refactor" @click="refactorId = null">
+                                <i class="el-icon-close" />
+                            </button>
+                        </div>
+                        <span v-else style="cursor: pointer"
+                              @click="setSrc(scope.row.url, scope.row.typeCode)"
+                        >{{scope.row.fileName}}</span>
+                    </template>
+                </el-table-column>
+                <el-table-column
+                        prop="modifiedDate"
+                        label="修改时间"
+                        width="150px">
+                </el-table-column>
+                <el-table-column width="100px">
+                    <!--                <span v-show="isHover === 1">123</span>-->
+                    <template slot-scope="scope">
+                        <div v-show="scope.row.id === hoverId">
+                            <i class="el-icon-share" v-bind:title="share"></i>
+                            <i class="el-icon-download" @click="download(scope.row.url)" v-bind:title="down"></i>
+                            <el-dropdown trigger="click" placement="bottom" @command="handleCommand">
                             <span class="el-dropdown-link">
                                 <i class="el-icon-more" v-bind:title="more"></i>
                             </span>
-                            <el-dropdown-menu slot="dropdown">
-                                <el-dropdown-item command="move">移动到</el-dropdown-item>
-                                <el-dropdown-item command="refactor">重命名</el-dropdown-item>
-                                <el-dropdown-item command="copy">复制到</el-dropdown-item>
-                                <el-dropdown-item command="delete">删除</el-dropdown-item>
-                            </el-dropdown-menu>
-                        </el-dropdown>
-                    </div>
-                    <!--                    <el-button v-show="scope.row.hoverFlag" type="primary">123</el-button>-->
-                </template>
-            </el-table-column>
-            <el-table-column
-                    prop="size"
-                    label="大小"
-                    width="250px">
-            </el-table-column>
-        </el-table>
+                                <el-dropdown-menu slot="dropdown">
+                                    <el-dropdown-item command="move">移动到</el-dropdown-item>
+                                    <el-dropdown-item command="refactor">重命名</el-dropdown-item>
+                                    <el-dropdown-item command="copy">复制到</el-dropdown-item>
+                                    <el-dropdown-item command="delete">删除</el-dropdown-item>
+                                </el-dropdown-menu>
+                            </el-dropdown>
+                        </div>
+                        <!--                    <el-button v-show="scope.row.hoverFlag" type="primary">123</el-button>-->
+                    </template>
+                </el-table-column>
+                <el-table-column
+                        prop="size"
+                        label="大小"
+                        width="250px">
+                </el-table-column>
+            </el-table>
+        </div>
     </div>
 </template>
 
@@ -193,6 +200,7 @@
                 isHover: 0,
                 share: '分享',
                 down: '下载',
+                count: 0,
                 more: '更多',
                 videoState: false,
                 isSelect: 0,
@@ -227,6 +235,9 @@
             video
         },
         methods: {
+            load () {
+                this.count += 2
+            },
             async refactorFile () {
                 this.refactorId = null
                 await this.put('/file/refactorFile', this.refactorData).then(res => [

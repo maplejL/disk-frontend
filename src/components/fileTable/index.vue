@@ -7,9 +7,9 @@
                    ref="fileTable"
                    @loadFile="loadFile"></fileTable>
         <div class="detail">
-            <fileDetail :data="detail" @play="play" ref="fileDetail"></fileDetail>
+            <fileDetail :data="detail" @play="play" ref="fileDetail" v-if="typeCode !== 0"></fileDetail>
         </div>
-        <div class="block" style="float: left; position:relative; top: 20px">
+        <div class="block" style="float: left; position:relative; top: 20px" v-if="typeCode !== 0">
             <el-pagination
                     @size-change="handleSizeChange"
                     @current-change="handleCurrentChange"
@@ -46,6 +46,7 @@
         },
         mounted () {
             this.loadFile()
+            console.log(this.typeCode)
         },
         methods: {
             cellMouseEnter (row) {

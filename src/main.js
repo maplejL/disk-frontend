@@ -20,6 +20,8 @@ import 'viewerjs/dist/viewer.css'
 import Viewer from 'v-viewer'
 import Video from 'video.js'
 import 'video.js/dist/video-js.css'
+import Chat from 'jwchat'
+Vue.use(Chat)
 
 Vue.prototype.$video = Video
 // 引入图片浏览插件

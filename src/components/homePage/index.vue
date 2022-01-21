@@ -13,11 +13,11 @@
                         </MenuItem>
                         <MenuItem name="2">
                             <Icon type="ios-keypad"></Icon>
-                            <el-button type="primary" size="middle" @click="testSocket">测试socket</el-button>
+                            item 2
                         </MenuItem>
-                        <MenuItem name="3">
+                        <MenuItem name="3" @click.native="toChat">
                             <Icon type="ios-analytics"></Icon>
-                            Item 3
+                            聊天
                         </MenuItem>
                         <MenuItem name="4">
                             <Icon type="ios-paper"></Icon>
@@ -26,9 +26,10 @@
                     </div>
                 </Menu>
             </Header>
-            <Layout :style="{padding: '0 20px'}">
-                <Breadcrumb :style="{margin: '16px 0'}" v-for="(item,index) in breads" :key=index>
-                    <Breadcrumb.Item :style="{width: '50px'}">{{item}}</Breadcrumb.Item>
+            <jw-chat v-show="ischat === 1"></jw-chat>
+            <Layout v-show="ischat === 0" :style="{padding: '0 20px'}">
+                <Breadcrumb :style="{margin: '16px 0'}">
+                    <Breadcrumb.Item :style="{width: '50px'}">首页</Breadcrumb.Item>
                 </Breadcrumb>
                 <Content :style="{padding: '24px 0', minHeight: '280px', background: '#fff'}">
                     <Layout v-model="name">
@@ -42,6 +43,7 @@
                                         <Icon type="ios-navigate"></Icon>
                                         全部文件
                                     </template>
+                                    <MenuItem name="全部">全部</MenuItem>
                                     <MenuItem name="视频">视频</MenuItem>
                                     <MenuItem name="文档">文档</MenuItem>
                                     <MenuItem name="音乐">音乐</MenuItem>
@@ -86,10 +88,12 @@
 </style>
 <script>
     import file from '../fileTable/index'
+    import jwChat from '../jwChat/jwChat'
     export default {
         name: 'homePage',
         data () {
             return {
+                ischat: 0,
                 name: '',
                 breadcrumb: ['主页'],
                 typeName: null,
@@ -102,10 +106,12 @@
                 stompClient: '',
                 timer: '',
                 shopId: '1',
+                foldersList: []
             }
         },
         components: {
-            file
+            file,
+            jwChat
         },
         created () {
             this.$nextTick(() => {
@@ -114,9 +120,16 @@
                     this.$refs.typeName.updateActiveName()
                 }
             })
-            this.initWebSocket()
             // this.getPublicKey()
             // this.loadFile()
+        },
+        mounted () {
+            if (localStorage.getItem('token')) {
+                this.initWebSocket()
+            }
+            setTimeout(() => {
+                this.websocketclose()
+            }, 3000)
         },
         // watch: {
         //     $route: {
@@ -127,21 +140,13 @@
         //     }
         // },
         methods: {
-            testSocket () {
-                this.get('/test/sendAllWebSocket')
-                console.log(this.socket)
-            },
-            collapse: function () {
-                this.isCollapse = !this.isCollapse
-                if (this.isCollapse) {
-                    this.iconClass = 'cebianlanzhankai'
-                } else {
-                    this.iconClass = 'cebianlanshouhui'
-                }
+            toChat () {
+                this.ischat = 1
+                console.log(this.ischat)
             },
             initWebSocket: function () {
                 // WebSocket与普通的请求所用协议有所不同，ws等同于http，wss等同于https
-                this.websock = new WebSocket('ws://localhost:9999/websocket/DPS007')
+                this.websock = new WebSocket('ws://localhost:9999/websocket/1')
                 this.websock.onopen = this.websocketonopen
                 this.websock.onerror = this.websocketonerror
                 this.websock.onmessage = this.websocketonmessage
@@ -181,9 +186,12 @@
                 this.$route.query.typeName = e
                 this.typeName = e
                 switch (this.typeName) {
+                case '全部':
+                    this.typeCode = 0
+                    this.getFolders()
+                    break
                 case '视频':
                     this.typeCode = 1
-                    this.breads.push('视频')
                     break
                 case '文档':
                     this.typeCode = 2
@@ -196,6 +204,13 @@
                     break
                 }
                 this.loadFile()
+            },
+            async getFolders () {
+                let res = await this.get('/folders/getFolders')
+                this.foldersList = res.data.data
+                this.foldersList.forEach(item => {
+                    console.log(item)
+                })
             },
             parentTag (e) {
                 console.log(e[0])
