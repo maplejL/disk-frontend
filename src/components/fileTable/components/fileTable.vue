@@ -9,7 +9,9 @@
             <table>
                 <tr>
                     <td>
-                        <upload :typeCode="typeCode"></upload>
+                        <upload :typeCode="typeCode"
+                                @refreshData="refreshData"
+                        ></upload>
                     </td>
                     <td style="position: relative">
                         <el-button size="small"
@@ -235,6 +237,9 @@
             video
         },
         methods: {
+            refreshData () {
+                this.$emit('refreshData')
+            },
             load () {
                 this.count += 2
             },

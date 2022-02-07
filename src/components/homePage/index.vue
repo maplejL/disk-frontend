@@ -4,12 +4,27 @@
             <Header>
                 <Menu mode="horizontal" theme="dark" active-name="1">
                     <div>
-                        <img src="static/image/logo.png" style="height: 60px;width: 200px;float: left">
+                        <img src="static/image/logo.png"
+                             style="height: 60px;width: 200px;float: left"
+                             @click="home"
+                        >
                     </div>
                     <div class="layout-nav">
-                        <MenuItem name="1" @click.native="doLogin">
+                        <MenuItem name="1">
                             <Icon type="ios-navigate"></Icon>
-                            登录
+                            <span v-if="userInfo === null" @click="doLogin">登录</span>
+                            <el-dropdown v-else>
+                                  <span class="el-dropdown-link" style="color: white">
+                                    欢迎, {{userInfo === null?'1':userInfo.username}}<i class="el-icon-arrow-down el-icon--right"></i>
+                                  </span>
+                                <el-dropdown-menu slot="dropdown">
+                                    <span><b>个人设置</b></span>
+                                    <el-divider></el-divider>
+                                    <el-dropdown-item icon="el-icon-circle-plus" @click.native="showPersonInfo = true">个人信息</el-dropdown-item>
+                                    <el-dropdown-item icon="el-icon-circle-plus-outline" @click.native="isUpdatePass = true">修改密码</el-dropdown-item>
+                                    <el-dropdown-item icon="el-icon-check" @click.native="doLogout">退出登录</el-dropdown-item>
+                                </el-dropdown-menu>
+                            </el-dropdown>
                         </MenuItem>
                         <MenuItem name="2">
                             <Icon type="ios-keypad"></Icon>
@@ -19,17 +34,15 @@
                             <Icon type="ios-analytics"></Icon>
                             聊天
                         </MenuItem>
-                        <MenuItem name="4">
-                            <Icon type="ios-paper"></Icon>
-                            Item 4
-                        </MenuItem>
                     </div>
                 </Menu>
             </Header>
-            <jw-chat v-show="ischat === 1"></jw-chat>
+            <chat v-show="ischat===1" :userInfo="userInfo" :contentData="friendsData"></chat>
             <Layout v-show="ischat === 0" :style="{padding: '0 20px'}">
                 <Breadcrumb :style="{margin: '16px 0'}">
-                    <Breadcrumb.Item :style="{width: '50px'}">首页</Breadcrumb.Item>
+                    <Breadcrumb.Item>Home</Breadcrumb.Item>
+                    <Breadcrumb.Item>List</Breadcrumb.Item>
+                    <Breadcrumb.Item>App</Breadcrumb.Item>
                 </Breadcrumb>
                 <Content :style="{padding: '24px 0', minHeight: '280px', background: '#fff'}">
                     <Layout v-model="name">
@@ -40,7 +53,7 @@
                             >
                                 <Submenu name="全部文件">
                                     <template slot="title">
-                                        <Icon type="ios-navigate"></Icon>
+                                        <i class="el-icon-folder-opened"></i>
                                         全部文件
                                     </template>
                                     <MenuItem name="全部">全部</MenuItem>
@@ -51,7 +64,7 @@
                                 </Submenu>
                                 <Submenu name="我的分享">
                                     <template slot="title">
-                                        <Icon type="ios-keypad"></Icon>
+                                        <i class="el-icon-share"></i>
                                         我的分享
                                     </template>
                                     <MenuItem name="分享记录">分享记录</MenuItem>
@@ -59,10 +72,10 @@
                                 </Submenu>
                                 <Submenu name="回收站">
                                     <template slot="title">
-                                        <Icon type="ios-analytics"></Icon>
+                                        <i class="el-icon-delete"></i>
                                         回收站
                                     </template>
-                                    <MenuItem name="已删除文件">已删除文件</MenuItem>
+                                    <MenuItem name="已删除文件" @click.native="getDelete">已删除文件</MenuItem>
                                     <!--                                    <MenuItem name="3-2">Option 2</MenuItem>-->
                                 </Submenu>
                             </Menu>
@@ -73,11 +86,86 @@
                                   :typeCode="typeCode"
                                   :total="totalFiles"
                                   @changePage="changePage"
+                                  @refreshData="loadFile"
+                                  v-show="showRubbish === 0"
                                   @loadFile="loadFile"></file>
-                            <rubbish></rubbish>
+                            <rubbish v-show="showRubbish === 1"
+                                     :tableData="deleteFiles"
+                                     @changeRubbishPage = "changeRubbishPage"
+                                     :total="totalDelete"
+                                     :pageSize="pageSize"
+                            ></rubbish>
                         </Content>
                     </Layout>
                 </Content>
+                <el-dialog v-if="userInfo !== null" :visible.sync="showPersonInfo">
+                    <el-descriptions class="margin-top" title="个人信息" :column="1" border>
+                        <el-descriptions-item :span="3">
+                            <template slot="label" style="width: 50px">
+                                <i class="el-icon-user"></i>
+                                用户名
+                            </template>
+                            {{userInfo.username}}
+                        </el-descriptions-item>
+                        <el-descriptions-item>
+                            <template slot="label">
+                                <i class="el-icon-mobile-phone"></i>
+                                手机号
+                            </template>
+                            {{userInfo.phone}}
+                        </el-descriptions-item>
+                        <el-descriptions-item>
+                            <template slot="label">
+                                <i class="el-icon-location-outline"></i>
+                                居住地
+                            </template>
+                            {{userInfo.city}}
+                        </el-descriptions-item>
+                        <el-descriptions-item>
+                            <template slot="label">
+                                <i class="el-icon-tickets"></i>
+                                备注
+                            </template>
+                            <el-tag size="small">学校</el-tag>
+                        </el-descriptions-item>
+                        <el-descriptions-item>
+                            <template slot="label">
+                                <i class="el-icon-office-building"></i>
+                                联系地址
+                            </template>
+                            {{userInfo.address}}
+                        </el-descriptions-item>
+                        <el-descriptions-item>
+                            <template slot="label">
+                                <i class="el-icon-office-building"></i>
+                                性别
+                            </template>
+                            {{userInfo.sex === 1? '男':'女'}}
+                        </el-descriptions-item>
+                    </el-descriptions>
+                </el-dialog>
+                <el-dialog title="修改密码" :visible.sync="isUpdatePass" >
+<!--                    <el-form :model="userInfo">-->
+<!--                        <el-form-item label="原密码">-->
+<!--                            <el-input placeholder="请输入密码" v-model="password" show-password></el-input>-->
+<!--                        </el-form-item>-->
+<!--                    </el-form>-->
+                    <el-form :model="info">
+                        <el-form-item label="原密码" label-width="120px">
+                            <el-input placeholder="请输入原密码" v-model="oldPassword" show-password style="width: 300px"></el-input>
+                        </el-form-item>
+                        <el-form-item label="新密码" label-width="120px" prop="newPassword">
+                            <el-input placeholder="请输入新密码" v-model="info.newPassword" show-password style="width: 300px"></el-input>
+                        </el-form-item>
+                        <el-form-item label="确认密码" label-width="120px" prop="checkPassword">
+                            <el-input placeholder="请确认密码" v-model="info.checkPassword" show-password style="width: 300px"></el-input>
+                        </el-form-item>
+                    </el-form>
+                    <div slot="footer" class="dialog-footer">
+                        <el-button @click="isUpdatePass = false">取 消</el-button>
+                        <el-button type="primary" @click="updatePassword()">确 定</el-button>
+                    </div>
+                </el-dialog>
             </Layout>
             <Footer class="layout-footer-center">2011-2016 &copy; TalkingData</Footer>
         </Layout>
@@ -88,10 +176,21 @@
 </style>
 <script>
     import file from '../fileTable/index'
-    import jwChat from '../jwChat/jwChat'
+    import JSEncrypt from 'jsencrypt'
+    import rubbish from '../rubbish/index'
+    import chat from '../chat/index'
     export default {
         name: 'homePage',
         data () {
+            var validatePass2 = (rule, value, callback) => {
+                if (value === '') {
+                    callback(new Error('请再次输入密码'))
+                } else if (value !== this.info.password) {
+                    this.$message('两次输入密码不一致!')
+                } else {
+                    callback()
+                }
+            }
             return {
                 ischat: 0,
                 name: '',
@@ -106,12 +205,34 @@
                 stompClient: '',
                 timer: '',
                 shopId: '1',
-                foldersList: []
+                foldersList: [],
+                userInfo: null,
+                isUpdatePass: false,
+                showPersonInfo: false,
+                showRubbish: 0,
+                deleteFiles: null,
+                oldPassword: '',
+                friendsData: null,
+                totalDelete: 0,
+                info: {
+                    newPassword: '',
+                    checkPassword: ''
+                },
+                rules: {
+                    newPassword: [
+                        { required: true, message: '请输入密码', trigger: 'blur' }
+                        // { pattern: /^(?![a-zA-Z]+$)(?![A-Z0-9]+$)(?![A-Z\W_]+$)(?![a-z0-9]+$)(?![a-z\W_]+$)(?![0-9\W_]+$)[a-zA-Z0-9\W_]{8,30}$/, message: '密码为数字，小写字母，大写字母，特殊符号 至少包含三种，长度为 8 - 30位，密码不能包含 用户名，公司名称(lidian), 公司域名(rekoon) （判断的时候不区分大小写)' }
+                    ],
+                    checkPassword: [
+                        { required: true, validator: validatePass2, trigger: 'blur' }
+                    ]
+                }
             }
         },
         components: {
+            rubbish,
             file,
-            jwChat
+            chat
         },
         created () {
             this.$nextTick(() => {
@@ -120,6 +241,7 @@
                     this.$refs.typeName.updateActiveName()
                 }
             })
+            this.userInfo = JSON.parse(localStorage.getItem('userInfo'))
             // this.getPublicKey()
             // this.loadFile()
         },
@@ -127,9 +249,6 @@
             if (localStorage.getItem('token')) {
                 this.initWebSocket()
             }
-            setTimeout(() => {
-                this.websocketclose()
-            }, 3000)
         },
         // watch: {
         //     $route: {
@@ -140,13 +259,61 @@
         //     }
         // },
         methods: {
-            toChat () {
+            home () {
+                this.$router.push('/homePage')
+            },
+            changeRubbishPage (val) {
+                this.pageNo = val
+                this.getDelete()
+            },
+            getDelete () {
+                this.showRubbish = 1
+                this.post('/file/getDeleteFiles', {
+                    pageSize: this.pageSize,
+                    pageNo: this.pageNo
+                }).then(res => {
+                    this.deleteFiles = res.data.data.files
+                    this.deleteFiles.forEach(item => {
+                        item.createdDate = this.$moment(item.createdDate).format('YYYY-MM-DD HH:mm:ss')
+                        item.modifiedDate = this.$moment(item.modifiedDate).format('YYYY-MM-DD HH:mm:ss')
+                    })
+                    this.totalDelete = res.data.data.total
+                })
+            },
+            async toChat () {
                 this.ischat = 1
-                console.log(this.ischat)
+                let res = await this.get('/user/getFriends', {
+                    id: this.userInfo.id
+                })
+                this.friendsData = res.data.data
+            },
+            doLogout () {
+                this.$message.success('退出成功')
+                localStorage.removeItem('userInfo')
+                localStorage.removeItem('token')
+                this.userInfo = null
+                this.websocketclose()
+            },
+            updatePassword () {
+                if (this.info.newPassword === this.info.checkPassword) {
+                    let encryptor = new JSEncrypt()
+                    encryptor.setPublicKey(this.global.publicKey)
+                    let data = {
+                        'id': this.userInfo.id,
+                        'newPassword': encryptor.encrypt(this.info.newPassword)
+                    }
+                    console.log(data)
+                    this.axios.put('/user/update', data).then(res => {
+                        this.$message.success('修改成功')
+                        setTimeout(() => {
+                            this.isUpdatePass = false
+                        }, 2000)
+                    })
+                }
             },
             initWebSocket: function () {
                 // WebSocket与普通的请求所用协议有所不同，ws等同于http，wss等同于https
-                this.websock = new WebSocket('ws://localhost:9999/websocket/1')
+                this.websock = new WebSocket('ws://localhost:9999/websocket/'+this.userInfo.id)
                 this.websock.onopen = this.websocketonopen
                 this.websock.onerror = this.websocketonerror
                 this.websock.onmessage = this.websocketonmessage
@@ -160,11 +327,9 @@
             },
             websocketonmessage: function (e) {
                 var da = JSON.parse(e.data)
-                console.log(da)
-                this.message = da
             },
             websocketclose: function (e) {
-                console.log('connection closed (' + e.code + ')')
+                console.log('connection closed')
             },
             changePage (pageSize, pageNo) {
                 this.pageSize = pageSize
@@ -183,6 +348,7 @@
                 console.log(name)
             },
             changeType (e) {
+                this.showRubbish = 0
                 this.$route.query.typeName = e
                 this.typeName = e
                 switch (this.typeName) {
@@ -215,7 +381,12 @@
             parentTag (e) {
                 console.log(e[0])
             },
-            loadFile () {
+            loadFile (val) {
+                console.log(val)
+                if (val !== null) {
+                    this.pageNo = val
+                    console.log(val)
+                }
                 this.post('/file/getPage', {
                     pageSize: this.pageSize,
                     pageNo: this.pageNo,

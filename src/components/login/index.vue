@@ -75,8 +75,8 @@
         <div v-else id="registerBox">
             <h3>注册</h3>
             <el-form
-                    :model="loginForm"
-                    :rules="loginRules"
+                    :model="registerForm"
+                    :rules="ruleValidate"
                     ref="loginForm"
                     label-width="0px"
             >
@@ -93,7 +93,7 @@
                             <el-input
                                     class="inps"
                                     placeholder='用户名'
-                                    v-model="loginForm.username"
+                                    v-model="registerForm.username"
                             ></el-input>
                         </el-col>
                     </el-row>
@@ -111,7 +111,7 @@
                                     type="password"
                                     class="inps"
                                     placeholder='密码'
-                                    v-model="loginForm.password"
+                                    v-model="registerForm.password"
                             ></el-input>
                         </el-col>
                     </el-row>
@@ -129,7 +129,7 @@
                             <el-input
                                     class="inps"
                                     placeholder='邮箱'
-                                    v-model="loginForm.email"
+                                    v-model="registerForm.email"
                             ></el-input>
                         </el-col>
                     </el-row>
@@ -147,7 +147,7 @@
                             <el-input
                                     class="inps"
                                     placeholder='城市'
-                                    v-model="loginForm.city"
+                                    v-model="registerForm.city"
                             ></el-input>
                         </el-col>
                     </el-row>
@@ -307,10 +307,10 @@
                     ],
                     city: [
                         { required: true, message: '请选择城市', trigger: 'change' }
-                    ],
-                    sex: [
-                        { required: true, message: '请选择性别', trigger: 'change' }
                     ]
+                    // sex: [
+                    //     { required: true, message: '请选择性别', trigger: 'change' }
+                    // ]
                 }
             }
         },
@@ -320,24 +320,15 @@
 
             this.createStar(true)
             this.drawFrame()
-            this.getPublicKey()
         },
         methods: {
-            async getPublicKey () {
-                let res = await this.axios.get('/user/getPublicKey')
-                this.global.setPublicKey(res.data.data.publicKey)
-                console.log(res.data.data.publicKey)
-                console.log(this.global.publicKey)
-            },
             changeView () {
                 this.showLogin = 0
             },
             doRegister () {
                 let encryptor = new JSEncrypt()
-                console.log(this.global.publicKey)
                 encryptor.setPublicKey(this.global.publicKey)
                 this.registerForm.password = encryptor.encrypt(this.registerForm.password)
-                console.log(this.registerForm.password)
                 this.axios.post('/user/register', this.registerForm).then(res => {
                     console.log(res)
                 })
@@ -352,12 +343,6 @@
                 this.loginForm.password = encryptor.encrypt(this.loginForm.password)
                 let res = await this.post('/user/login', this.loginForm)
                 console.log(res)
-                // this.$message.success('登陆成功')
-                // localStorage.setItem('userInfo', JSON.stringify(res.data.data.userInfo))
-                // this.axios.defaults.headers.common['token'] = res.data.data.token
-                // setTimeout(() => {
-                //     this.$router.push('/homePage')
-                // }, 2000)
             },
             // 重复动画
             drawFrame () {

@@ -20,7 +20,7 @@
             }
         },
         methods: {
-            upload (val) {
+            async upload (val) {
                 console.log(val)
                 let formData = new FormData()
                 formData.append('file', val.file)
@@ -31,7 +31,8 @@
                         'Content-Type': 'multipart/form-data'
                     }
                 }
-                this.post('/file/upload', formData, config)
+                await this.post('/file/upload', formData, config)
+                this.$emit('refreshData')
             }
         }
     }

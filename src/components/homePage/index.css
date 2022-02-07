@@ -36,3 +36,15 @@
     margin: 16px 0px;
     float: left;
 }
+
+.el-divider--horizontal {
+    margin: 0px 0;
+    background-color: black;
+    height: 1px;
+}
+
+.el-descriptions-item__cell el-descriptions-item__label is-bordered-label {
+    width: 100px;
+}
+
+

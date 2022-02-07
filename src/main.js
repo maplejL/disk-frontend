@@ -8,7 +8,7 @@ import ViewUI from 'view-design'
 import axios from 'axios'
 import global from '../static/global.js'
 import 'view-design/dist/styles/iview.css'
-import {post, get, myDelete, put} from './service/axiosSetting'
+import {post, get, myDelete, myPut} from './service/axiosSetting'
 import Moment from 'moment'
 //  导入所有请求方法
 // 引入ElementUI 组件库
@@ -57,7 +57,7 @@ Vue.prototype.global = global
 Vue.prototype.post = post
 Vue.prototype.get = get
 Vue.prototype.myDelete = myDelete
-Vue.prototype.put = put
+Vue.prototype.put = myPut
 Vue.config.productionTip = false
 axios.defaults.baseURL = '/api'
 Vue.prototype.$moment = Moment

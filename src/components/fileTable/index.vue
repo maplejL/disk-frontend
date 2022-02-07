@@ -5,6 +5,7 @@
                    class="fileTable"
                    @toDetail="toDetail"
                    ref="fileTable"
+                   @refreshData="refreshData"
                    @loadFile="loadFile"></fileTable>
         <div class="detail">
             <fileDetail :data="detail" @play="play" ref="fileDetail" v-if="typeCode !== 0"></fileDetail>
@@ -49,6 +50,9 @@
             console.log(this.typeCode)
         },
         methods: {
+            refreshData () {
+                this.$emit('refreshData')
+            },
             cellMouseEnter (row) {
                 this.$emit('cellMouseEnter', row)
             },
@@ -65,6 +69,7 @@
                 this.loadFile()
             },
             handleCurrentChange (val) {
+                console.log(val)
                 this.pageNo = val - 1
                 this.loadFile()
             },
@@ -74,7 +79,7 @@
                 this.loadFile()
             },
             loadFile () {
-                this.$emit('loadFile')
+                this.$emit('loadFile', this.pageNo)
             }
         }
     }

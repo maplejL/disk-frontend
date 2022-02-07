@@ -1,10 +1,12 @@
 import axios from 'axios'
 import {Loading, Message} from 'element-ui'
 import router from '../router/index'
+import global from '../../static/global'
+
 let loadingInstance = null // 加载全局的loading
 
 const instance = axios.create({ // 创建axios实例，在这里可以设置请求的默认配置
-    timeout: 10000, // 设置超时时间10s
+    timeout: 15000, // 设置超时时间10s
     baseURL: '/api' // 根据自己配置的反向代理去设置不同环境的baeUrl
 })
 // 文档中的统一设置post请求头。下面会说到post请求的几种'Content-Type'
@@ -23,6 +25,11 @@ instance.defaults.headers.post['Content-Type'] = 'application/json'
 /** 添加请求拦截器 **/
 instance.interceptors.request.use(config => {
     config.headers['token'] = JSON.parse(localStorage.getItem('token')) || ''
+    if (!global.publicKey) {
+        axios.get('/user/getPublicKey').then(res => {
+            global.setPublicKey(res.data.data.publicKey)
+        })
+    }
     if (config.url.includes('/file/download')) {
         loadingInstance = Loading.service({
             text: '下载中...'
@@ -86,9 +93,11 @@ instance.interceptors.response.use(response => {
             type: 'error'
         })
         if (error.response.status === 401) { // token或者登陆失效情况下跳转到登录页面，根据实际情况，在这里可以根据不同的响应错误结果，做对应的事。这里我以401判断为例
-            router.push({
-                path: `/login`
-            })
+            setTimeout(() => {
+                router.push({
+                    path: `/login`
+                })
+            }, 1000)
         }
         return Promise.reject(error)
     } else {
@@ -118,7 +127,7 @@ export const get = (url, params, config = {}) => {
 }
 
 /* 统一封装put请求 */
-export const put = (url, data, config = {}) => {
+export const myPut = (url, data, config = {}) => {
     return new Promise((resolve, reject) => {
         instance({
             method: 'put',
