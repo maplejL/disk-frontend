@@ -195,6 +195,7 @@
 
 <script>
     import JSEncrypt from 'jsencrypt'
+    // import {Message} from 'element-ui'
 
     export default {
         data () {
@@ -213,20 +214,20 @@
                 },
                 ruleValidate: {
                     username: [
-                        { required: true, message: '姓名不能为空', trigger: 'blur' }
+                        {required: true, message: '姓名不能为空', trigger: 'blur'}
                     ],
                     password: [
-                        { required: true, message: '密码不能为空', trigger: 'blur' }
+                        {required: true, message: '密码不能为空', trigger: 'blur'}
                     ],
                     email: [
-                        { required: true, message: '邮箱不能为空', trigger: 'blur' },
-                        { type: 'email', message: '邮箱格式不正确', trigger: 'blur' }
+                        {required: true, message: '邮箱不能为空', trigger: 'blur'},
+                        {type: 'email', message: '邮箱格式不正确', trigger: 'blur'}
                     ],
                     city: [
-                        { required: true, message: '请选择城市', trigger: 'change' }
+                        {required: true, message: '请选择城市', trigger: 'change'}
                     ],
                     sex: [
-                        { required: true, message: '请选择性别', trigger: 'change' }
+                        {required: true, message: '请选择性别', trigger: 'change'}
                     ]
                     // interest: [
                     //     { required: true, type: 'array', min: 1, message: '至少选择一个爱好', trigger: 'change' },
@@ -302,11 +303,11 @@
                     ],
                     password: [{required: true, message: '请输入密码', trigger: 'blur'}],
                     email: [
-                        { required: true, message: '邮箱不能为空', trigger: 'blur' },
-                        { type: 'email', message: '邮箱格式不正确', trigger: 'blur' }
+                        {required: true, message: '邮箱不能为空', trigger: 'blur'},
+                        {type: 'email', message: '邮箱格式不正确', trigger: 'blur'}
                     ],
                     city: [
-                        { required: true, message: '请选择城市', trigger: 'change' }
+                        {required: true, message: '请选择城市', trigger: 'change'}
                     ]
                     // sex: [
                     //     { required: true, message: '请选择性别', trigger: 'change' }
@@ -341,8 +342,46 @@
                 let encryptor = new JSEncrypt()
                 encryptor.setPublicKey(this.global.publicKey)
                 this.loginForm.password = encryptor.encrypt(this.loginForm.password)
-                let res = await this.post('/user/login', this.loginForm)
-                console.log(res)
+                // let res = await this.post('/user/login', this.loginForm)
+                this.post('/user/login', this.loginForm).then(res => {
+                    this.$message.success('登陆成功，2s后自动跳转')
+                    setTimeout(() => {
+                        this.$router.push({path: '/homePage'})
+                    }, 2000)
+                    localStorage.setItem('userInfo', JSON.stringify(res.data.data.userInfo))
+                    localStorage.setItem('token', JSON.stringify(res.data.data.token))
+                    this.initWebSocket()
+                    console.log(res)
+                })
+            },
+            async initWebSocket () {
+                let userInfo = JSON.parse(localStorage.getItem('userInfo'))
+                // WebSocket与普通的请求所用协议有所不同，ws等同于http，wss等同于https
+                this.websock = await new WebSocket('ws://localhost:9999/websocket/' + userInfo.id)
+                this.websock.onopen = await this.websocketonopen
+                this.websock.onerror = this.websocketonerror
+                this.websock.onmessage = this.websocketonmessage
+                this.websock.onclose = this.websocketclose
+            },
+            websocketonopen () {
+                console.log('WebSocket连接成功')
+            },
+            websocketonerror (e) {
+                console.log('WebSocket连接发生错误')
+            },
+            async websocketonmessage (e) {
+                console.log(e)
+                let data = await JSON.parse(e.data)
+                this.tempChats = data.tempChat
+                if (this.tempChats.length) {
+                    console.log(1222)
+                    setTimeout(() => {
+                        this.$message.info('您有未读聊天!')
+                    }, 2000)
+                }
+            },
+            websocketclose (e) {
+                console.log('connection closed')
             },
             // 重复动画
             drawFrame () {
@@ -484,16 +523,19 @@
                 color: #39f;
                 width: 200px;
             }
+
             .registerButton {
                 background-color: transparent;
                 color: white;
                 width: 200px;
             }
+
             .iconfont {
                 text-align: center;
                 color: #fff;
             }
         }
+
         #registerBox {
             width: 400px;
             height: 550px;
@@ -509,6 +551,7 @@
             background: linear-gradient(230deg,
             rgba(53, 57, 74, 0) 0%,
             rgb(0, 0, 0) 100%);
+
             /deep/ .inps input {
                 border: none;
                 color: #fff;
@@ -521,11 +564,13 @@
                 color: #39f;
                 width: 200px;
             }
+
             .registerButton {
                 background-color: transparent;
                 color: white;
                 width: 200px;
             }
+
             .iconfont {
                 text-align: center;
                 color: #fff;

@@ -21,6 +21,8 @@ import Viewer from 'v-viewer'
 import Video from 'video.js'
 import 'video.js/dist/video-js.css'
 import Chat from 'jwchat'
+import Contextmenu from 'vue-contextmenujs'
+Vue.use(Contextmenu)
 Vue.use(Chat)
 
 Vue.prototype.$video = Video

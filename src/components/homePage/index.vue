@@ -31,13 +31,14 @@
                             item 2
                         </MenuItem>
                         <MenuItem name="3" @click.native="toChat">
-                            <Icon type="ios-analytics"></Icon>
-                            聊天
+                            <el-badge :value="12" class="item">
+                                <span style="width: 50%;">聊天</span>
+                            </el-badge>
                         </MenuItem>
                     </div>
                 </Menu>
             </Header>
-            <chat v-show="ischat===1" :userInfo="userInfo" :contentData="friendsData"></chat>
+            <chat v-show="ischat===1" :userInfo="userInfo" :contentData="friendsData" :conversations="conversations"></chat>
             <Layout v-show="ischat === 0" :style="{padding: '0 20px'}">
                 <Breadcrumb :style="{margin: '16px 0'}">
                     <Breadcrumb.Item>Home</Breadcrumb.Item>
@@ -206,6 +207,7 @@
                 timer: '',
                 shopId: '1',
                 foldersList: [],
+                conversations: [],
                 userInfo: null,
                 isUpdatePass: false,
                 showPersonInfo: false,
@@ -246,9 +248,6 @@
             // this.loadFile()
         },
         mounted () {
-            if (localStorage.getItem('token')) {
-                this.initWebSocket()
-            }
         },
         // watch: {
         //     $route: {
@@ -285,7 +284,12 @@
                 let res = await this.get('/user/getFriends', {
                     id: this.userInfo.id
                 })
+                let conversations = await this.get('/conversation/conversations', {
+                    id: this.userInfo.id
+                })
                 this.friendsData = res.data.data
+                console.log(conversations.data.data)
+                this.conversations = conversations.data.data
             },
             doLogout () {
                 this.$message.success('退出成功')
@@ -293,6 +297,28 @@
                 localStorage.removeItem('token')
                 this.userInfo = null
                 this.websocketclose()
+            },
+            initWebSocket: function () {
+                let userInfo = JSON.parse(localStorage.getItem('userInfo'))
+                // WebSocket与普通的请求所用协议有所不同，ws等同于http，wss等同于https
+                this.websock = new WebSocket('ws://localhost:9999/websocket/' + userInfo.id)
+                this.websock.onopen = this.websocketonopen
+                this.websock.onerror = this.websocketonerror
+                this.websock.onmessage = this.websocketonmessage
+                this.websock.onclose = this.websocketclose
+            },
+            websocketonopen: function () {
+                console.log('WebSocket连接成功')
+            },
+            websocketonerror: function (e) {
+                console.log('WebSocket连接发生错误')
+            },
+            websocketonmessage: function (e) {
+                console.log(e)
+                // var da = JSON.parse(e.data)
+            },
+            websocketclose: function (e) {
+                console.log('connection closed')
             },
             updatePassword () {
                 if (this.info.newPassword === this.info.checkPassword) {
@@ -310,26 +336,6 @@
                         }, 2000)
                     })
                 }
-            },
-            initWebSocket: function () {
-                // WebSocket与普通的请求所用协议有所不同，ws等同于http，wss等同于https
-                this.websock = new WebSocket('ws://localhost:9999/websocket/'+this.userInfo.id)
-                this.websock.onopen = this.websocketonopen
-                this.websock.onerror = this.websocketonerror
-                this.websock.onmessage = this.websocketonmessage
-                this.websock.onclose = this.websocketclose
-            },
-            websocketonopen: function () {
-                console.log('WebSocket连接成功')
-            },
-            websocketonerror: function (e) {
-                console.log('WebSocket连接发生错误')
-            },
-            websocketonmessage: function (e) {
-                var da = JSON.parse(e.data)
-            },
-            websocketclose: function (e) {
-                console.log('connection closed')
             },
             changePage (pageSize, pageNo) {
                 this.pageSize = pageSize
@@ -382,10 +388,8 @@
                 console.log(e[0])
             },
             loadFile (val) {
-                console.log(val)
                 if (val !== null) {
                     this.pageNo = val
-                    console.log(val)
                 }
                 this.post('/file/getPage', {
                     pageSize: this.pageSize,

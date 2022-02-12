@@ -1,12 +1,12 @@
 import axios from 'axios'
-import {Loading, Message} from 'element-ui'
+import {Loading, Message, MessageBox} from 'element-ui'
 import router from '../router/index'
 import global from '../../static/global'
 
 let loadingInstance = null // 加载全局的loading
 
 const instance = axios.create({ // 创建axios实例，在这里可以设置请求的默认配置
-    timeout: 15000, // 设置超时时间10s
+    timeout: 150000, // 设置超时时间10s
     baseURL: '/api' // 根据自己配置的反向代理去设置不同环境的baeUrl
 })
 // 文档中的统一设置post请求头。下面会说到post请求的几种'Content-Type'
@@ -84,6 +84,7 @@ instance.interceptors.response.use(response => {
     }
 }, error => {
     loadingInstance.close()
+    let json = JSON.parse(error.response.data.message)
     if (error.response) {
         // 根据请求失败的http状态码去给用户相应的提示
         // let tips = error.response.status in httpCode ? httpCode[error.response.status] : error.response.data.message
@@ -92,6 +93,27 @@ instance.interceptors.response.use(response => {
             message: tips,
             type: 'error'
         })
+        if (error.response.data.status === 444) {
+            setTimeout(() => {
+                MessageBox({
+                    title: '提示:',
+                    message: '是否继续登录',
+                    showCancelButton: true,
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消'
+                }).then(action => {
+                    Message({
+                        message: '正在登陆'
+                    })
+                    let loginForm = {
+                        'username': json[0].username,
+                        'password': json[0].password,
+                        'stillLogin': true
+                    }
+                    post('/user/login', loginForm)
+                })
+            }, 1000)
+        }
         if (error.response.status === 401) { // token或者登陆失效情况下跳转到登录页面，根据实际情况，在这里可以根据不同的响应错误结果，做对应的事。这里我以401判断为例
             setTimeout(() => {
                 router.push({

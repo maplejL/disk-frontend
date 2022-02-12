@@ -46,5 +46,10 @@
 .el-descriptions-item__cell el-descriptions-item__label is-bordered-label {
     width: 100px;
 }
-
+.item {
+    height: 50px;
+    margin-top: 10px;
+    width: 60px;
+    text-align: center;
+}
 

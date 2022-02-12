@@ -10,12 +10,25 @@
                 </div>
                 <div class="left-content">
                     <table v-if="contentData !== null && color1 === false">
-                        <tr style="height: 50px;border-bottom: 1px solid black" v-for="(item, index) in contentData" :key="index">
+                        <tr style="height: 50px;border-bottom: 1px solid black" v-for="(item, index) in contentData" :key="index"
+                            @contextmenu.prevent="onContextmenu(item)">
                             <td width="50px">
                                 <img src="static/image/img.png" style="width: 45px;height: 45px;margin: 5px;float: left">
                             </td>
                             <td style="position: relative;width: 250px">
                                 <span style="position: absolute;top: 0px;font-size: 16px;left: 10px" @click="chooseUser(index)">{{item.username}}</span>
+                                <span style="position: absolute;top: 0px;right: 0px; font-size: 16px">1237777</span>
+                            </td>
+                        </tr>
+                    </table>
+                    <table v-if="conversations !== null && color2 === false">
+                        <tr style="height: 50px;border-bottom: 1px solid black" v-for="(item, index) in conversations" :key="index"
+                            @contextmenu.prevent="onContextmenu(item)">
+                            <td width="50px">
+                                <img src="static/image/img.png" style="width: 45px;height: 45px;margin: 5px;float: left">
+                            </td>
+                            <td style="position: relative;width: 250px">
+                                <span style="position: absolute;top: 0px;font-size: 16px;left: 10px" @click="showChat(item)">{{item.conversationName}}</span>
                                 <span style="position: absolute;top: 0px;right: 0px; font-size: 16px">1237777</span>
                             </td>
                         </tr>
@@ -50,6 +63,9 @@
                         </td></tr>
                     </table>
                 </div>
+                <div v-if="isChat === true" style="border: 1px solid;height: 100%">
+
+                </div>
             </el-main>
         </el-container>
     </div>
@@ -58,15 +74,73 @@
 <script>
     export default {
         name: 'chat',
-        props: ['userInfo', 'contentData'],
+        props: ['userInfo', 'contentData', 'conversations'],
         data () {
             return {
                 color1: false,
                 color2: false,
-                chosenUser: null
+                chosenUser: null,
+                isChat: false
             }
         },
+        components: {
+        },
         methods: {
+            test (item) {
+                console.log(item)
+            },
+            onContextmenu (item) {
+                this.$contextmenu({
+                    items: [
+                        {
+                            label: '发起聊天',
+                            onClick: () => {
+                                this.session()
+                                let userIds = []
+                                let conversationName = '' + this.userInfo.username + ',' + item.username
+                                userIds.push(this.userInfo.id)
+                                userIds.push(item.id)
+                                this.post('/conversation/addConversation', {
+                                    userIds,
+                                    conversationName
+                                }).then(res => {
+                                    console.log(res)
+                                })
+                            }
+                        }
+                    //     {
+                    //         label: '返回(B)',
+                    //         onClick: () => {
+                    //             this.message = '返回(B)'
+                    //             console.log('返回(B)')
+                    //         },
+                    //         disabled: true
+                    //     },
+                    //     { label: '前进(F)', disabled: true },
+                    //     { label: '重新加载(R)', divided: true, icon: 'el-icon-refresh' },
+                    //     { label: '投射(C)...', divided: true },
+                    //     {
+                    //         label: '截取网页(R)',
+                    //         minWidth: 0,
+                    //         children: [
+                    //             {
+                    //                 label: '截取可视化区域',
+                    //                 onClick: () => {
+                    //                     this.message = '截取可视化区域'
+                    //                     console.log('截取可视化区域')
+                    //                 }
+                    //             },
+                    //             { label: '截取全屏' }
+                    //         ]
+                    //     }
+                    ],
+                    event,
+                    customClass: 'class-a',
+                    zIndex: 3,
+                    minWidth: 230
+                })
+                return false
+            },
             session () {
                 this.color2 = false
                 this.color1 = true
@@ -77,6 +151,10 @@
             },
             chooseUser (index) {
                 this.chosenUser = this.contentData[index]
+            },
+            showChat () {
+                this.chosenUser = null
+                this.isChat = true
             }
         }
     }
@@ -144,5 +222,21 @@
     .info div{
         height: 80px;
         border: 1px solid;
+    }
+    .context-menu {
+        .ctx-menu {
+            min-width: 65px;
+            font-size: 14px;
+
+            li {
+                padding: 5px 14px;
+                text-align: center;
+                cursor: pointer;
+
+                &:hover {
+                    background-color: #409eff;
+                }
+            }
+        }
     }
 </style>
