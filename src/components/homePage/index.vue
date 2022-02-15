@@ -31,9 +31,9 @@
                             item 2
                         </MenuItem>
                         <MenuItem name="3" @click.native="toChat">
-                            <el-badge :value="12" class="item">
-                                <span style="width: 50%;">聊天</span>
-                            </el-badge>
+                                <el-badge :value="12" class="item">
+                                    <span style="width: 50%;">聊天</span>
+                                </el-badge>
                         </MenuItem>
                     </div>
                 </Menu>
