@@ -1,5 +1,5 @@
 import axios from 'axios'
-import {Loading, Message, MessageBox} from 'element-ui'
+import {Loading, Message} from 'element-ui'
 import router from '../router/index'
 import global from '../../static/global'
 
@@ -25,7 +25,7 @@ instance.defaults.headers.post['Content-Type'] = 'application/json'
 /** 添加请求拦截器 **/
 instance.interceptors.request.use(config => {
     config.headers['token'] = JSON.parse(localStorage.getItem('token')) || ''
-    if (!global.publicKey) {
+    if (!global.publicKey || global.publicKey === null) {
         axios.get('/user/getPublicKey').then(res => {
             global.setPublicKey(res.data.data.publicKey)
         })
@@ -34,6 +34,8 @@ instance.interceptors.request.use(config => {
         loadingInstance = Loading.service({
             text: '下载中...'
         })
+    } else if (config.url.includes('/chatRecord/send')) {
+        loadingInstance = null
     } else {
         loadingInstance = Loading.service({ // 发起请求时加载全局loading，请求失败或有响应时会关闭
             text: '拼命加载中...'
@@ -55,7 +57,9 @@ instance.interceptors.request.use(config => {
 
 /** 添加响应拦截器  **/
 instance.interceptors.response.use(response => {
-    loadingInstance.close()
+    if (loadingInstance !== null) {
+        loadingInstance.close()
+    }
     if (response.status === 200) { // 响应结果里的statusText: ok是我与后台的约定，大家可以根据实际情况去做对应的判断
         if (response.config.url === '/user/login') {
             Message({
@@ -63,7 +67,7 @@ instance.interceptors.response.use(response => {
                 type: 'success'
             })
             setTimeout(() => {
-                router.push({path: '/homePage'})
+                router.push({path: '/'})
             }, 2000)
             localStorage.setItem('userInfo', JSON.stringify(response.data.data.userInfo))
             localStorage.setItem('token', JSON.stringify(response.data.data.token))
@@ -84,7 +88,8 @@ instance.interceptors.response.use(response => {
     }
 }, error => {
     loadingInstance.close()
-    let json = JSON.parse(error.response.data.message)
+    console.log(error.response.data)
+    // let json = JSON.parse(error.response.data.message)
     if (error.response) {
         // 根据请求失败的http状态码去给用户相应的提示
         // let tips = error.response.status in httpCode ? httpCode[error.response.status] : error.response.data.message
@@ -93,27 +98,6 @@ instance.interceptors.response.use(response => {
             message: tips,
             type: 'error'
         })
-        if (error.response.data.status === 444) {
-            setTimeout(() => {
-                MessageBox({
-                    title: '提示:',
-                    message: '是否继续登录',
-                    showCancelButton: true,
-                    confirmButtonText: '确定',
-                    cancelButtonText: '取消'
-                }).then(action => {
-                    Message({
-                        message: '正在登陆'
-                    })
-                    let loginForm = {
-                        'username': json[0].username,
-                        'password': json[0].password,
-                        'stillLogin': true
-                    }
-                    post('/user/login', loginForm)
-                })
-            }, 1000)
-        }
         if (error.response.status === 401) { // token或者登陆失效情况下跳转到登录页面，根据实际情况，在这里可以根据不同的响应错误结果，做对应的事。这里我以401判断为例
             setTimeout(() => {
                 router.push({

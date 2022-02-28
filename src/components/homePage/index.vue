@@ -5,7 +5,7 @@
                 <Menu mode="horizontal" theme="dark" active-name="1">
                     <div>
                         <img src="static/image/logo.png"
-                             style="height: 60px;width: 200px;float: left"
+                             style="height: 60px;width: 200px;float: left;cursor: pointer"
                              @click="home"
                         >
                     </div>
@@ -15,14 +15,20 @@
                             <span v-if="userInfo === null" @click="doLogin">登录</span>
                             <el-dropdown v-else>
                                   <span class="el-dropdown-link" style="color: white">
-                                    欢迎, {{userInfo === null?'1':userInfo.username}}<i class="el-icon-arrow-down el-icon--right"></i>
+                                    欢迎, {{userInfo === null?'1':userInfo.username}}<i
+                                          class="el-icon-arrow-down el-icon--right"></i>
                                   </span>
                                 <el-dropdown-menu slot="dropdown">
                                     <span><b>个人设置</b></span>
                                     <el-divider></el-divider>
-                                    <el-dropdown-item icon="el-icon-circle-plus" @click.native="showPersonInfo = true">个人信息</el-dropdown-item>
-                                    <el-dropdown-item icon="el-icon-circle-plus-outline" @click.native="isUpdatePass = true">修改密码</el-dropdown-item>
-                                    <el-dropdown-item icon="el-icon-check" @click.native="doLogout">退出登录</el-dropdown-item>
+                                    <el-dropdown-item icon="el-icon-circle-plus" @click.native="showPersonInfo = true">
+                                        个人信息
+                                    </el-dropdown-item>
+                                    <el-dropdown-item icon="el-icon-circle-plus-outline"
+                                                      @click.native="isUpdatePass = true">修改密码
+                                    </el-dropdown-item>
+                                    <el-dropdown-item icon="el-icon-check" @click.native="doLogout">退出登录
+                                    </el-dropdown-item>
                                 </el-dropdown-menu>
                             </el-dropdown>
                         </MenuItem>
@@ -31,14 +37,34 @@
                             item 2
                         </MenuItem>
                         <MenuItem name="3" @click.native="toChat">
-                                <el-badge :value="12" class="item">
-                                    <span style="width: 50%;">聊天</span>
-                                </el-badge>
+                            <el-badge :value="tempChatsCount" class="item">
+                                <span style="width: 50%;color: white;" v-show="tempChatsCount === 0">聊天</span>
+                                <el-dropdown trigger="hover" v-show="tempChatsCount !== 0">
+                                    <span class="el-dropdown-link" style="color: white">
+                                    聊天<i class="el-icon-arrow-down el-icon--right"></i>
+                                  </span>
+                                    <el-dropdown-menu slot="dropdown"
+                                                      divided="true"
+                                                      style="width: 300px; position:absolute; left: 1420px"
+                                    >
+                                        <el-dropdown-item v-for="(item, index) in tempChats" :key="index">
+                                            <span style="float: left;width: auto;word-break: normal">{{item.content}}</span>
+                                            <br/>
+                                            <span style="float: left">{{item.conversationName}}</span>
+                                            <span style="float: right">
+                                                {{item.modifiedDate}}
+                                            </span>
+                                            <br/>
+                                        </el-dropdown-item>
+                                    </el-dropdown-menu>
+                                </el-dropdown>
+                            </el-badge>
                         </MenuItem>
                     </div>
                 </Menu>
             </Header>
-            <chat v-show="ischat===1" :userInfo="userInfo" :contentData="friendsData" :conversations="conversations"></chat>
+            <chat v-show="ischat===1" :userInfo="userInfo" :contentData="friendsData"
+                  :conversations="conversations" :newChatRecord="newChatRecord" ref="chat"></chat>
             <Layout v-show="ischat === 0" :style="{padding: '0 20px'}">
                 <Breadcrumb :style="{margin: '16px 0'}">
                     <Breadcrumb.Item>Home</Breadcrumb.Item>
@@ -92,7 +118,7 @@
                                   @loadFile="loadFile"></file>
                             <rubbish v-show="showRubbish === 1"
                                      :tableData="deleteFiles"
-                                     @changeRubbishPage = "changeRubbishPage"
+                                     @changeRubbishPage="changeRubbishPage"
                                      :total="totalDelete"
                                      :pageSize="pageSize"
                             ></rubbish>
@@ -145,21 +171,24 @@
                         </el-descriptions-item>
                     </el-descriptions>
                 </el-dialog>
-                <el-dialog title="修改密码" :visible.sync="isUpdatePass" >
-<!--                    <el-form :model="userInfo">-->
-<!--                        <el-form-item label="原密码">-->
-<!--                            <el-input placeholder="请输入密码" v-model="password" show-password></el-input>-->
-<!--                        </el-form-item>-->
-<!--                    </el-form>-->
+                <el-dialog title="修改密码" :visible.sync="isUpdatePass">
+                    <!--                    <el-form :model="userInfo">-->
+                    <!--                        <el-form-item label="原密码">-->
+                    <!--                            <el-input placeholder="请输入密码" v-model="password" show-password></el-input>-->
+                    <!--                        </el-form-item>-->
+                    <!--                    </el-form>-->
                     <el-form :model="info">
                         <el-form-item label="原密码" label-width="120px">
-                            <el-input placeholder="请输入原密码" v-model="oldPassword" show-password style="width: 300px"></el-input>
+                            <el-input placeholder="请输入原密码" v-model="oldPassword" show-password
+                                      style="width: 300px"></el-input>
                         </el-form-item>
                         <el-form-item label="新密码" label-width="120px" prop="newPassword">
-                            <el-input placeholder="请输入新密码" v-model="info.newPassword" show-password style="width: 300px"></el-input>
+                            <el-input placeholder="请输入新密码" v-model="info.newPassword" show-password
+                                      style="width: 300px"></el-input>
                         </el-form-item>
                         <el-form-item label="确认密码" label-width="120px" prop="checkPassword">
-                            <el-input placeholder="请确认密码" v-model="info.checkPassword" show-password style="width: 300px"></el-input>
+                            <el-input placeholder="请确认密码" v-model="info.checkPassword" show-password
+                                      style="width: 300px"></el-input>
                         </el-form-item>
                     </el-form>
                     <div slot="footer" class="dialog-footer">
@@ -172,7 +201,7 @@
         </Layout>
     </div>
 </template>
-<style>
+<style scoped lang="less">
     @import "index.css";
 </style>
 <script>
@@ -180,6 +209,7 @@
     import JSEncrypt from 'jsencrypt'
     import rubbish from '../rubbish/index'
     import chat from '../chat/index'
+
     export default {
         name: 'homePage',
         data () {
@@ -216,17 +246,20 @@
                 oldPassword: '',
                 friendsData: null,
                 totalDelete: 0,
+                tempChats: null,
+                tempChatsCount: 0,
+                newChatRecord: null,
                 info: {
                     newPassword: '',
                     checkPassword: ''
                 },
                 rules: {
                     newPassword: [
-                        { required: true, message: '请输入密码', trigger: 'blur' }
+                        {required: true, message: '请输入密码', trigger: 'blur'}
                         // { pattern: /^(?![a-zA-Z]+$)(?![A-Z0-9]+$)(?![A-Z\W_]+$)(?![a-z0-9]+$)(?![a-z\W_]+$)(?![0-9\W_]+$)[a-zA-Z0-9\W_]{8,30}$/, message: '密码为数字，小写字母，大写字母，特殊符号 至少包含三种，长度为 8 - 30位，密码不能包含 用户名，公司名称(lidian), 公司域名(rekoon) （判断的时候不区分大小写)' }
                     ],
                     checkPassword: [
-                        { required: true, validator: validatePass2, trigger: 'blur' }
+                        {required: true, validator: validatePass2, trigger: 'blur'}
                     ]
                 }
             }
@@ -243,11 +276,17 @@
                     this.$refs.typeName.updateActiveName()
                 }
             })
-            this.userInfo = JSON.parse(localStorage.getItem('userInfo'))
+
+            // this.initWebSocket()
             // this.getPublicKey()
             // this.loadFile()
         },
         mounted () {
+            this.userInfo = JSON.parse(localStorage.getItem('userInfo'))
+            if (this.userInfo !== null) {
+                console.log(this.userInfo)
+                this.initWebSocket()
+            }
         },
         // watch: {
         //     $route: {
@@ -259,7 +298,7 @@
         // },
         methods: {
             home () {
-                this.$router.push('/homePage')
+                this.ischat = 0
             },
             changeRubbishPage (val) {
                 this.pageNo = val
@@ -292,11 +331,16 @@
                 this.conversations = conversations.data.data
             },
             doLogout () {
-                this.$message.success('退出成功')
-                localStorage.removeItem('userInfo')
-                localStorage.removeItem('token')
-                this.userInfo = null
-                this.websocketclose()
+                this.get('/user/logout', {
+                    'id': this.userInfo.id
+                }).then(res => {
+                    this.$message.success('退出成功')
+                    localStorage.removeItem('userInfo')
+                    localStorage.removeItem('token')
+                    this.userInfo = null
+                    this.websocketclose()
+                    this.$route.push({path: '/'})
+                })
             },
             initWebSocket: function () {
                 let userInfo = JSON.parse(localStorage.getItem('userInfo'))
@@ -313,8 +357,28 @@
             websocketonerror: function (e) {
                 console.log('WebSocket连接发生错误')
             },
-            websocketonmessage: function (e) {
+            async websocketonmessage (e) {
                 console.log(e)
+                let data = await JSON.parse(e.data)
+                if (data && data.tempChat) {
+                    this.tempChats = await data.tempChat
+                    console.log(this.tempChats)
+                    if (this.tempChats.length > 0) {
+                        this.tempChats.forEach(item => {
+                            item.createdDate = this.$moment(item.createdDate).format('YYYY-MM-DD HH:mm:ss')
+                            item.modifiedDate = this.$moment(item.modifiedDate).format('YYYY-MM-DD HH:mm:ss')
+                        })
+                    }
+                }
+                if (this.tempChats.length) {
+                    this.$message.info('您有未读聊天!')
+                    this.tempChatsCount = this.tempChats.length
+                }
+                console.log(data)
+                if (data.newChatRecord !== null) {
+                    this.newChatRecord = data.newChatRecord
+                    console.log(this.newChatRecord)
+                }
                 // var da = JSON.parse(e.data)
             },
             websocketclose: function (e) {

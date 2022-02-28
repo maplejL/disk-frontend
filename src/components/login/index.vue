@@ -195,7 +195,7 @@
 
 <script>
     import JSEncrypt from 'jsencrypt'
-    // import {Message} from 'element-ui'
+    import {MessageBox} from 'element-ui'
 
     export default {
         data () {
@@ -321,6 +321,9 @@
 
             this.createStar(true)
             this.drawFrame()
+            this.get('/user/getPublicKey').then(res => {
+                global.setPublicKey(res.data.data.publicKey)
+            })
         },
         methods: {
             changeView () {
@@ -343,22 +346,41 @@
                 encryptor.setPublicKey(this.global.publicKey)
                 this.loginForm.password = encryptor.encrypt(this.loginForm.password)
                 // let res = await this.post('/user/login', this.loginForm)
-                this.post('/user/login', this.loginForm).then(res => {
-                    this.$message.success('登陆成功，2s后自动跳转')
-                    setTimeout(() => {
-                        this.$router.push({path: '/homePage'})
-                    }, 2000)
-                    localStorage.setItem('userInfo', JSON.stringify(res.data.data.userInfo))
-                    localStorage.setItem('token', JSON.stringify(res.data.data.token))
-                    this.initWebSocket()
-                    console.log(res)
+                this.post('/user/login', this.loginForm).catch(error => {
+                    if (error.response.data.status === 444) {
+                        setTimeout(() => {
+                            MessageBox({
+                                title: '提示:',
+                                message: '是否继续登录',
+                                showCancelButton: true,
+                                confirmButtonText: '确定',
+                                cancelButtonText: '取消'
+                            }).then(action => {
+                                this.$message({
+                                    message: '正在登陆'
+                                })
+                                this.loginForm.stillLogin = true
+                                this.post('/user/login', this.loginForm)
+                            })
+                        }, 1000)
+                    }
                 })
+                // console.log(res)
+                // await localStorage.setItem('userInfo', JSON.stringify(res.data.data.userInfo))
+                // await localStorage.setItem('token', JSON.stringify(res.data.data.token))
+                // await console.log(localStorage.setItem('userInfo', JSON.stringify(res.data.data.userInfo)))
+                // await this.initWebSocket()
+                // this.$message.success('登陆成功，2s后自动跳转')
+                // setTimeout(() => {
+                //     this.$router.push({path: '/homePage'})
+                // }, 2000)
             },
-            async initWebSocket () {
+            initWebSocket () {
                 let userInfo = JSON.parse(localStorage.getItem('userInfo'))
+                console.log(userInfo)
                 // WebSocket与普通的请求所用协议有所不同，ws等同于http，wss等同于https
-                this.websock = await new WebSocket('ws://localhost:9999/websocket/' + userInfo.id)
-                this.websock.onopen = await this.websocketonopen
+                this.websock = new WebSocket('ws://localhost:9999/websocket/' + userInfo.id)
+                this.websock.onopen = this.websocketonopen
                 this.websock.onerror = this.websocketonerror
                 this.websock.onmessage = this.websocketonmessage
                 this.websock.onclose = this.websocketclose
@@ -371,14 +393,6 @@
             },
             async websocketonmessage (e) {
                 console.log(e)
-                let data = await JSON.parse(e.data)
-                this.tempChats = data.tempChat
-                if (this.tempChats.length) {
-                    console.log(1222)
-                    setTimeout(() => {
-                        this.$message.info('您有未读聊天!')
-                    }, 2000)
-                }
             },
             websocketclose (e) {
                 console.log('connection closed')
