@@ -1,7 +1,7 @@
 <template>
     <div class="layout">
         <Layout>
-            <Header>
+            <Header style="margin-bottom: 20px">
                 <Menu mode="horizontal" theme="dark" active-name="1">
                     <div>
                         <img src="static/image/logo.png"
@@ -21,7 +21,7 @@
                                 <el-dropdown-menu slot="dropdown">
                                     <span><b>个人设置</b></span>
                                     <el-divider></el-divider>
-                                    <el-dropdown-item icon="el-icon-circle-plus" @click.native="showPersonInfo = true">
+                                    <el-dropdown-item icon="el-icon-circle-plus" @click.native="personInfo">
                                         个人信息
                                     </el-dropdown-item>
                                     <el-dropdown-item icon="el-icon-circle-plus-outline"
@@ -32,10 +32,10 @@
                                 </el-dropdown-menu>
                             </el-dropdown>
                         </MenuItem>
-                        <MenuItem name="2">
-                            <Icon type="ios-keypad"></Icon>
-                            item 2
-                        </MenuItem>
+<!--                        <MenuItem name="2">-->
+<!--                            <Icon type="ios-keypad"></Icon>-->
+<!--                            item 2-->
+<!--                        </MenuItem>-->
                         <MenuItem name="3" @click.native="toChat">
                             <el-badge :value="tempChatsCount" class="item">
                                 <span style="width: 50%;color: white;" v-show="tempChatsCount === 0">聊天</span>
@@ -45,9 +45,9 @@
                                   </span>
                                     <el-dropdown-menu slot="dropdown"
                                                       divided="true"
-                                                      style="width: 300px; position:absolute; left: 1420px"
+                                                      style="width: 300px; position:relative; left: 100px;height: 600px;overflow-y: auto"
                                     >
-                                        <el-dropdown-item v-for="(item, index) in tempChats" :key="index">
+                                        <el-dropdown-item v-for="(item, index) in tempChats" :key="index" @click.native="clickTempChat(item)">
                                             <span style="float: left;width: auto;word-break: normal">{{item.content}}</span>
                                             <br/>
                                             <span style="float: left">{{item.conversationName}}</span>
@@ -64,13 +64,13 @@
                 </Menu>
             </Header>
             <chat v-show="ischat===1" :userInfo="userInfo" :contentData="friendsData"
-                  :conversations="conversations" :newChatRecord="newChatRecord" ref="chat"></chat>
+                  :conversations="conversations" :newChatRecord="newChatRecord" :chosenTempChat="chosenTempChat" ref="chat"></chat>
             <Layout v-show="ischat === 0" :style="{padding: '0 20px'}">
-                <Breadcrumb :style="{margin: '16px 0'}">
-                    <Breadcrumb.Item>Home</Breadcrumb.Item>
-                    <Breadcrumb.Item>List</Breadcrumb.Item>
-                    <Breadcrumb.Item>App</Breadcrumb.Item>
-                </Breadcrumb>
+<!--                <Breadcrumb :style="{margin: '16px 0'}">-->
+<!--                    <Breadcrumb.Item>Home</Breadcrumb.Item>-->
+<!--                    <Breadcrumb.Item>List</Breadcrumb.Item>-->
+<!--                    <Breadcrumb.Item>App</Breadcrumb.Item>-->
+<!--                </Breadcrumb>-->
                 <Content :style="{padding: '24px 0', minHeight: '280px', background: '#fff'}">
                     <Layout v-model="name">
                         <Sider hide-trigger :style="{background: '#fff'}">
@@ -114,6 +114,7 @@
                                   :total="totalFiles"
                                   @changePage="changePage"
                                   @refreshData="loadFile"
+                                  @doSearch="doSearch"
                                   v-show="showRubbish === 0"
                                   @loadFile="loadFile"></file>
                             <rubbish v-show="showRubbish === 1"
@@ -121,53 +122,147 @@
                                      @changeRubbishPage="changeRubbishPage"
                                      :total="totalDelete"
                                      :pageSize="pageSize"
+                                     @refreshRubbish="refreshRubbish"
                             ></rubbish>
                         </Content>
                     </Layout>
                 </Content>
-                <el-dialog v-if="userInfo !== null" :visible.sync="showPersonInfo">
+                <el-dialog v-if="userInfo !== null" :visible.sync="showPersonInfo" style="z-index: 9999">
                     <el-descriptions class="margin-top" title="个人信息" :column="1" border>
                         <el-descriptions-item :span="3">
                             <template slot="label" style="width: 50px">
                                 <i class="el-icon-user"></i>
                                 用户名
                             </template>
-                            {{userInfo.username}}
+                            <span v-show="refactorUsername === false" style="margin-top: 10px">{{userInfo.username}}</span>
+                            <div v-show="refactorUsername === true" style="display: inline;width: 450px">
+                                <el-input
+                                        type="text"
+                                        v-model="userInfo.username"
+                                        style="width: 360px"
+                                ></el-input>
+                                <button class="refactor" @click="refactorUser('name')">
+                                    <i class="el-icon-check"/>
+                                </button>
+                                <button class="refactor" @click="refactorUsername = false">
+                                    <i class="el-icon-close"/>
+                                </button>
+                            </div>
+                            <div style="float: right;display: inline;">
+                                <el-button type="primary" size="small"  @click="refactor('name')">修改</el-button>
+                            </div>
                         </el-descriptions-item>
                         <el-descriptions-item>
                             <template slot="label">
                                 <i class="el-icon-mobile-phone"></i>
                                 手机号
                             </template>
-                            {{userInfo.phone}}
+                            <span v-show="refactorUserPhone === false" style="margin-top: 10px">{{userInfo.phone}}</span>
+                            <div v-show="refactorUserPhone === true" style="display: inline;width: 450px">
+                                <el-input
+                                        type="text"
+                                        v-model="userInfo.phone"
+                                        style="width: 360px"
+                                ></el-input>
+                                <button class="refactor" @click="refactorUser('phone')">
+                                    <i class="el-icon-check"/>
+                                </button>
+                                <button class="refactor" @click="refactorUserPhone = false">
+                                    <i class="el-icon-close"/>
+                                </button>
+                            </div>
+                            <div style="float: right;display: inline;">
+                                <el-button type="primary" size="small"  @click="refactor('phone')">修改</el-button>
+                            </div>
                         </el-descriptions-item>
                         <el-descriptions-item>
                             <template slot="label">
                                 <i class="el-icon-location-outline"></i>
                                 居住地
                             </template>
-                            {{userInfo.city}}
+                            <span v-show="refactorUserCity === false" style="margin-top: 10px">{{userInfo.city}}</span>
+                            <div v-show="refactorUserCity === true" style="display: inline;width: 450px">
+                                <el-input
+                                        type="text"
+                                        v-model="userInfo.city"
+                                        style="width: 360px"
+                                ></el-input>
+                                <button class="refactor" @click="refactorUser('city')">
+                                    <i class="el-icon-check"/>
+                                </button>
+                                <button class="refactor" @click="refactorUserCity = false">
+                                    <i class="el-icon-close"/>
+                                </button>
+                            </div>
+                            <div style="float: right;display: inline;">
+                                <el-button type="primary" size="small"  @click="refactor('city')">修改</el-button>
+                            </div>
                         </el-descriptions-item>
-                        <el-descriptions-item>
-                            <template slot="label">
-                                <i class="el-icon-tickets"></i>
-                                备注
-                            </template>
-                            <el-tag size="small">学校</el-tag>
-                        </el-descriptions-item>
+<!--                        <el-descriptions-item>-->
+<!--                            <template slot="label">-->
+<!--                                <i class="el-icon-tickets"></i>-->
+<!--                                备注-->
+<!--                            </template>-->
+<!--                            <el-tag size="small">学校</el-tag>-->
+<!--                        </el-descriptions-item>-->
                         <el-descriptions-item>
                             <template slot="label">
                                 <i class="el-icon-office-building"></i>
                                 联系地址
                             </template>
-                            {{userInfo.address}}
+                            <span v-show="refactorUserAddress === false" style="margin-top: 10px">{{userInfo.address}}</span>
+                            <div v-show="refactorUserAddress === true" style="display: inline;width: 450px">
+                                <el-input
+                                        type="text"
+                                        v-model="userInfo.address"
+                                        style="width: 360px"
+                                ></el-input>
+                                <button class="refactor" @click="refactorUser('address')">
+                                    <i class="el-icon-check"/>
+                                </button>
+                                <button class="refactor" @click="refactorUserAddress = false">
+                                    <i class="el-icon-close"/>
+                                </button>
+                            </div>
+                            <div style="float: right;display: inline;">
+                                <el-button type="primary" size="small"  @click="refactor('address')">修改</el-button>
+                            </div>
                         </el-descriptions-item>
                         <el-descriptions-item>
                             <template slot="label">
                                 <i class="el-icon-office-building"></i>
                                 性别
                             </template>
-                            {{userInfo.sex === 1? '男':'女'}}
+
+<!--                            {{userInfo.sex === 1? '男':'女'}}-->
+                            <span v-show="refactorUserSex === false" style="margin-top: 10px">{{userInfo.sex === 1? '男':'女'}}</span>
+                            <div v-show="refactorUserSex === true" style="display: inline;width: 450px">
+                                <el-radio v-model="userInfo.sex" label=1>男</el-radio>
+                                <el-radio v-model="userInfo.sex" label=2>女</el-radio>
+                                <button class="refactor" @click="refactorUser('sex')">
+                                    <i class="el-icon-check"/>
+                                </button>
+                                <button class="refactor" @click="refactorUserSex = false">
+                                    <i class="el-icon-close"/>
+                                </button>
+                            </div>
+                            <div style="float: right;display: inline;">
+                                <el-button type="primary" size="small"  @click="refactor('sex')">修改</el-button>
+                            </div>
+                        </el-descriptions-item>
+                        <el-descriptions-item>
+                            <template slot="label">
+                                <i class="el-icon-picture"></i>
+                                头像
+                            </template><!--                            <upload :avater="avater"></upload>-->
+                            <el-upload
+                                    class="avatar-uploader"
+                                    action="string"
+                                    :show-file-list="false"
+                                    :http-request="uploadAvater">
+                                <img style="height: 50px;width: 50px" :src="userInfo.avaterUrl" class="avatar">
+                                <i class="el-icon-plus avatar-uploader-icon"></i>
+                            </el-upload>
                         </el-descriptions-item>
                     </el-descriptions>
                 </el-dialog>
@@ -197,7 +292,7 @@
                     </div>
                 </el-dialog>
             </Layout>
-            <Footer class="layout-footer-center">2011-2016 &copy; TalkingData</Footer>
+            <Footer class="layout-footer-center">edit by LuJunjie@2022</Footer>
         </Layout>
     </div>
 </template>
@@ -209,6 +304,7 @@
     import JSEncrypt from 'jsencrypt'
     import rubbish from '../rubbish/index'
     import chat from '../chat/index'
+    import upload from '../common/upload'
 
     export default {
         name: 'homePage',
@@ -226,9 +322,12 @@
                 ischat: 0,
                 name: '',
                 breadcrumb: ['主页'],
+                avater: false,
+                avaterUrl: '',
                 typeName: null,
                 fileList: [],
                 pageSize: 5,
+                chosenTempChat: null,
                 pageNo: 0,
                 typeCode: 1,
                 totalFiles: 0,
@@ -241,6 +340,11 @@
                 userInfo: null,
                 isUpdatePass: false,
                 showPersonInfo: false,
+                refactorUsername: false,
+                refactorUserPhone: false,
+                refactorUserCity: false,
+                refactorUserAddress: false,
+                refactorUserSex: false,
                 showRubbish: 0,
                 deleteFiles: null,
                 oldPassword: '',
@@ -248,6 +352,7 @@
                 totalDelete: 0,
                 tempChats: null,
                 tempChatsCount: 0,
+                input: null,
                 newChatRecord: null,
                 info: {
                     newPassword: '',
@@ -267,7 +372,8 @@
         components: {
             rubbish,
             file,
-            chat
+            chat,
+            upload
         },
         created () {
             this.$nextTick(() => {
@@ -286,6 +392,7 @@
             if (this.userInfo !== null) {
                 console.log(this.userInfo)
                 this.initWebSocket()
+                this.avaterUrl = this.userInfo.avaterUrl
             }
         },
         // watch: {
@@ -297,6 +404,68 @@
         //     }
         // },
         methods: {
+            refreshRubbish () {
+                this.getDelete()
+            },
+            doSearch (pageNo, pageSize, input) {
+                this.loadFile(pageNo, pageSize, input)
+            },
+            refactorUser (type) {
+                this.post('/user/refactor', this.userInfo).then(res => {
+                    this.refactor(type)
+                    this.userInfo = res.data.data
+                    localStorage.setItem('userInfo', JSON.stringify(this.userInfo))
+                })
+            },
+            refactor (type) {
+                if (type === 'name') {
+                    this.refactorUsername = !this.refactorUsername
+                } else if (type === 'phone') {
+                    this.refactorUserPhone = !this.refactorUserPhone
+                } else if (type === 'city') {
+                    this.refactorUserCity = !this.refactorUserCity
+                } else if (type === 'address') {
+                    this.refactorUserAddress = !this.refactorUserAddress
+                } else if (type === 'sex') {
+                    this.refactorUserSex = !this.refactorUserSex
+                }
+                console.log(this.refactorUsername)
+            },
+            clickTempChat (val) {
+                console.log(val)
+                this.chosenTempChat = val
+                this.toChat()
+                this.get('/chatRecord/deleteTempChat', {
+                    'id': val.id,
+                    'userId': this.userInfo.id
+                }).then(res => {
+                    this.tempChats.splice(this.tempChats.indexOf(val), 1)
+                    this.tempChatsCount--
+                })
+            },
+            async uploadAvater (val) {
+                console.log(val)
+                let formData = new FormData()
+                formData.append('file', val.file)
+                formData.append('userId', this.userInfo.id)
+                formData.append('targetFilePath', 'C:\\Users\\user\\Videos\\Captures')
+                let config = {
+                    headers: {
+                        'Content-Type': 'multipart/form-data'
+                    }
+                }
+                await this.post('/file/uploadAvater', formData, config).then(res => {
+                    this.userInfo.avaterUrl = res.data.data.url
+                    this.userInfo.avaterId = res.data.data.id
+                    this.userInfo.avaterType = res.data.data.typeName
+                    localStorage.setItem('userInfo', JSON.stringify(this.userInfo))
+                })
+                // this.$emit('refreshData')
+            },
+            personInfo () {
+                this.showPersonInfo = true
+                this.avater = true
+            },
             home () {
                 this.ischat = 0
             },
@@ -327,10 +496,10 @@
                     id: this.userInfo.id
                 })
                 this.friendsData = res.data.data
-                console.log(conversations.data.data)
+                console.log(conversations)
                 this.conversations = conversations.data.data
             },
-            doLogout () {
+            async doLogout () {
                 this.get('/user/logout', {
                     'id': this.userInfo.id
                 }).then(res => {
@@ -339,7 +508,9 @@
                     localStorage.removeItem('token')
                     this.userInfo = null
                     this.websocketclose()
-                    this.$route.push({path: '/'})
+                    if (this.ischat === 1) {
+                        this.ischat = 0
+                    }
                 })
             },
             initWebSocket: function () {
@@ -362,6 +533,8 @@
                 let data = await JSON.parse(e.data)
                 if (data && data.tempChat) {
                     this.tempChats = await data.tempChat
+                    this.$message.info('您有未读聊天!')
+                    this.tempChatsCount = this.tempChats.length
                     console.log(this.tempChats)
                     if (this.tempChats.length > 0) {
                         this.tempChats.forEach(item => {
@@ -370,16 +543,10 @@
                         })
                     }
                 }
-                if (this.tempChats.length) {
-                    this.$message.info('您有未读聊天!')
-                    this.tempChatsCount = this.tempChats.length
-                }
                 console.log(data)
-                if (data.newChatRecord !== null) {
+                if (data.newChatRecord !== null && data.newChatRecord !== undefined) {
                     this.newChatRecord = data.newChatRecord
-                    console.log(this.newChatRecord)
                 }
-                // var da = JSON.parse(e.data)
             },
             websocketclose: function (e) {
                 console.log('connection closed')
@@ -395,10 +562,22 @@
                     console.log(data)
                     this.axios.put('/user/update', data).then(res => {
                         this.$message.success('修改成功')
+                        this.isUpdatePass = false
                         setTimeout(() => {
-                            this.isUpdatePass = false
-                        }, 2000)
+                            this.get('/user/logout', {
+                                'id': this.userInfo.id
+                            }).then(res => {
+                                this.$message.info('请重新登录')
+                                localStorage.removeItem('userInfo')
+                                localStorage.removeItem('token')
+                                this.userInfo = null
+                                this.websocketclose()
+                                this.$router.push('/login')
+                            })
+                        }, 1000)
                     })
+                } else {
+                    this.$message.error('两次输入的密码不一致')
                 }
             },
             changePage (pageSize, pageNo) {
@@ -451,14 +630,29 @@
             parentTag (e) {
                 console.log(e[0])
             },
-            loadFile (val) {
-                if (val !== null) {
-                    this.pageNo = val
+            loadFile (pageNo, pageSize, input) {
+                if (pageNo !== null && pageNo !== undefined) {
+                    this.pageNo = pageNo
                 }
+                console.log(pageSize)
+                if (pageSize !== null && pageSize !== undefined) {
+                    this.pageSize = pageSize
+                }
+                let params = {}
+                params.pageSize = this.pageSize
+                params.pageNo = this.pageNo
+                params.typeCode = this.typeCode
+                if (input !== null || input !== undefined) {
+                    params.input = input
+                } else {
+                    params.input = null
+                }
+                console.log(params)
                 this.post('/file/getPage', {
-                    pageSize: this.pageSize,
-                    pageNo: this.pageNo,
-                    typeCode: this.typeCode
+                    'pageSize': params.pageSize,
+                    'pageNo': params.pageNo,
+                    'typeCode': params.typeCode,
+                    'input': params.input
                 }).then((res) => {
                     console.log(res)
                     this.fileList = res.data.files

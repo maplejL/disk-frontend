@@ -36,9 +36,13 @@ instance.interceptors.request.use(config => {
         })
     } else if (config.url.includes('/chatRecord/send')) {
         loadingInstance = null
+    } else if (config.url.includes('/file/upload')) {
+        loadingInstance = Loading.service({
+            text: '正在上传,请稍候'
+        })
     } else {
         loadingInstance = Loading.service({ // 发起请求时加载全局loading，请求失败或有响应时会关闭
-            text: '拼命加载中...'
+            text: '加载中...'
         })
     }
     // // 在这里：可以根据业务需求可以在发送请求之前做些什么:例如我这个是导出文件的接口，因为返回的是二进制流，所以需要设置请求响应类型为blob，就可以在此处设置。
@@ -69,12 +73,19 @@ instance.interceptors.response.use(response => {
             setTimeout(() => {
                 router.push({path: '/'})
             }, 2000)
-            localStorage.setItem('userInfo', JSON.stringify(response.data.data.userInfo))
+            console.log(response.data.data)
+            let userInfo = response.data.data.userInfo
+            if (response.data.data.avater != null) {
+                userInfo.avaterUrl = response.data.data.avater.url
+                userInfo.avaterType = response.data.data.avater.typeName
+                userInfo.avaterId = response.data.data.avater.id
+            }
+            localStorage.setItem('userInfo', JSON.stringify(userInfo))
             localStorage.setItem('token', JSON.stringify(response.data.data.token))
         }
         if (response.config.url === '/file/upload') {
             Message({
-                message: '上传成功,请刷新页面',
+                message: '上传成功',
                 type: 'success'
             })
         }

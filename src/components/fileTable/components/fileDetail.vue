@@ -2,7 +2,16 @@
     <div class="content">
         <h4>文件详情</h4>
         <div v-if="showDetail">
-            <el-image :src="data.thumbnailName || data.url" style="margin-top: 10px" @click="play"></el-image>
+            <el-image v-if="typeCode === 1 || typeCode === 4" :src="data.thumbnailName || data.url" style="margin-top: 10px" @click="play"></el-image>
+            <div v-if="typeCode === 3">
+                <aplayer :music="{
+                    title: audioName,
+                    artist: audioArtist,
+                    src: audioSrc,
+                    pic: 'https://moeplayer.b0.upaiyun.com/aplayer/secretbase.jpg'
+                  }"
+                />
+            </div>
             <span style="font-size: 14px">{{data.fileName}}</span>
             <table style="margin-top: 10px;line-height: 20px">
                 <tr>
@@ -15,7 +24,7 @@
                 </tr>
                 <tr>
                     <td width="70px">文件格式</td>
-                    <td>{{data.modifiedDate}}</td>
+                    <td>{{data.typeName}}</td>
                 </tr>
             </table>
         </div>
@@ -28,13 +37,20 @@
 </template>
 
 <script>
+    import aplayer from 'vue-aplayer'
     export default {
         name: 'fileDetail',
-        props: ['data'],
+        props: ['data', 'typeCode', 'audioName', 'audioArtist', 'audioSrc'],
         data () {
             return {
                 showDetail: false
             }
+        },
+        mounted () {
+            console.log(this.audioSrc, this.audioName, this.audioArtist)
+        },
+        components: {
+            aplayer
         },
         methods: {
             play () {

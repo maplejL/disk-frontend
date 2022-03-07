@@ -1,6 +1,6 @@
 <template>
     <div>
-        <el-upload
+        <el-upload v-if="isAvater === false"
                 class="upload"
                 :http-request="upload"
                 action="string"
@@ -13,11 +13,24 @@
 <script>
     export default {
         name: 'upload',
-        props: ['typeCode'],
+        props: ['typeCode', 'avater', 'userId'],
         data () {
             return {
-                textList: ['上传视频', '上传文档', '上传音乐', '上传图片']
+                textList: ['上传视频', '上传文档', '上传音乐', '上传图片'],
+                isAvater: false
             }
+        },
+        watch: {
+            avater: {
+                handler (newV, oldV) {
+                    console.log(newV, oldV)
+                    // if (val !== null) {
+                    //     this.isAvater = true
+                    //     console.log('32121')
+                    // }
+                }
+            },
+            deep: true
         },
         methods: {
             async upload (val) {

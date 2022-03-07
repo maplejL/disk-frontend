@@ -9,7 +9,7 @@
             {{record.createdDate}}</div>
         <div class="row-5" v-show="showLeft === false">{{record.content}}
         </div>
-        <el-avatar :size="50" src="static/image/img.png" style="float: left">
+        <el-avatar :size="50" :src="record.avater.url" style="float: left">
         </el-avatar>
         <div class="left" v-show="showLeft === true">{{record.content}}</div>
         <br/><br/><br/>
@@ -20,9 +20,11 @@
 <script>
     export default {
         name: 'chatRecord',
-        props: ['showLeft', 'record'],
+        props: ['showLeft', 'record', 'avater'],
         data () {
-            return {}
+            return {
+                defaultAvaterUrl: 'static/image/img.png'
+            }
         }
     }
 </script>

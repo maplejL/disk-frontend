@@ -4,12 +4,12 @@
             <el-aside style="background-color: white">
                 <div style="height: 60px">
                     <ul>
-                        <li class="chatUl" @click="session" :class="{changeColor:color1==true}">会话</li>
-                        <li class="chatUl" @click="friends" :class="{changeColor:color2==true}">好友</li>
+                        <li class="chatUl" @click="session" :class="{changeColor:color1===true}">会话</li>
+                        <li class="chatUl" @click="friends" :class="{changeColor:color2===true}">好友</li>
                     </ul>
                 </div>
                 <div class="left-content">
-                    <table v-if="contentData !== null && color1 === false">
+                    <table v-if="contentData !== null && contentData !== undefined && color1 === false">
                         <tr style="height: 50px;border-bottom: 1px solid black" v-for="(item, index) in contentData"
                             :key="index"
                             @contextmenu.prevent="onContextmenu(item)">
@@ -24,18 +24,25 @@
                             </td>
                         </tr>
                     </table>
-                    <table v-if="conversations !== null && color2 === false">
+                    <table v-else-if="conversations !== null && conversations !== undefined && color2 === false">
                         <tr style="height: 50px;border-bottom: 1px solid black" v-for="(item, index) in conversations"
                             :key="index"
                             @contextmenu.prevent="onContextmenu(item)">
                             <td width="50px">
-                                <img src="static/image/img.png"
-                                     style="width: 45px;height: 45px;margin: 5px;float: left">
+                                <div style="width: 44px;height: 44px;border: 1px rgba(238,223,229,0.58)">
+                                    <div v-for="(item, index) in item.userAvaters" :key="index" style="width: 20px;height: 20px;float: left;">
+                                        <img :src="item.url" style="width: 20px;height: 20px;float: left;border-radius: 50%;">
+                                    </div>
+                                </div>
+<!--                                <img src="static/image/img.png"-->
+<!--                                     style="width: 45px;height: 45px;margin: 5px;float: left">-->
                             </td>
                             <td style="position: relative;width: 250px;">
-                                <span style="position: absolute;top: 0px;font-size: 16px;left: 10px;"
+                                <span :title="item.conversationName"
+                                      style="width: 80px;overflow: hidden;text-overflow:ellipsis;white-space:nowrap;position: absolute;top: 0px;font-size: 16px;left: 10px;cursor: pointer"
                                       @click="showChat(index)">{{item.conversationName}}</span>
-                                <span style="position: absolute;top: 0px;right: 0px; font-size: 16px">1237777</span>
+                                <span :title="item.createdDate"
+                                      style="width: 80px;overflow: hidden;position: absolute;top: 0px;right: 10px; font-size: 16px;text-overflow:ellipsis;white-space:nowrap;">{{item.createdDate}}</span>
                             </td>
                         </tr>
                     </table>
@@ -77,7 +84,7 @@
                     <div style="height: 50px;">
                         <span style="position: fixed;top: 100px;font-size: x-large">{{chosenConversation.conversationName}}</span>
                     </div>
-                    <div style="height: 550px;border: 1px solid;overflow-x: hidden;overflow-y: auto">
+                    <div id="chatRecords" style="height: 550px;border: 1px solid;overflow-x: hidden;overflow-y: auto;">
                         <!--                        <ul class="infinite-list" v-infinite-scroll="load" style="overflow:auto">-->
                         <!--                            <li v-for="(item, index) in chatRecords" :key="index" class="infinite-list-item">-->
                         <!--                                <chatRecord :showLeft="item.showLeft"-->
@@ -86,24 +93,20 @@
                         <!--                                </chatRecord>-->
                         <!--                            </li>-->
                         <!--                        </ul>-->
-                        <ul id="chatRecords" class="infinite-list" v-infinite-scroll="loadMore" infinite-scroll-disabled="busy"
+                        <ul class="infinite-list" v-infinite-scroll="loadMore" infinite-scroll-disabled="busy"
                             infinite-scroll-distance="10">
                             <li v-for="(item, index) in chatRecords" :key="index" class="infinite-list-item">
                                 <chatRecord :showLeft="item.showLeft"
                                             :record="item"
-                                            :key="index" :class="{selfStyle: item.showLeft === false}">
+                                            :key="index" :class="{selfStyle: item.showLeft === false}" :avaterUrl="userInfo.avaterUrl">
                                 </chatRecord>
                             </li>
                         </ul>
-                        <!--                        <span v-for="(item, index) in chatRecords" :key="index"-->
-                        <!--                              :class="{selfStyle: item.sendUser === userInfo.id}">-->
-                        <!--                            {{item.content}}-->
-                        <!--                        </span>-->
                         <br/>
                     </div>
                     <div style="border: 1px solid;height: 50px;margin: 0px;position:absolute;bottom: 0px;width: 100%">
                         <div>
-                            <el-button type="primary" size="middle" style="float: left"> 分享文件</el-button>
+                            <el-button type="primary" size="middle" style="float: left" @click="shareFile"> 分享文件</el-button>
                             <el-input style="float: left;width: 700px;margin-left: 20px"
                                       v-model="chatMessage" placeholder="请输入聊天内容">
                                 <template slot="append">
@@ -113,6 +116,14 @@
                         </div>
 
                     </div>
+                    <el-dialog
+                            title="提示"
+                            :visible.sync="dialogVisible"
+                            width="30%"
+                    >
+                        <el-tree :data="treeData" :props="defaultProps"></el-tree>
+<!--                        :props="defaultProps" @node-click="handleNodeClick"-->
+                    </el-dialog>
                 </div>
             </el-main>
         </el-container>
@@ -124,7 +135,7 @@
 
     export default {
         name: 'chat',
-        props: ['userInfo', 'contentData', 'conversations', 'newChatRecord'],
+        props: ['userInfo', 'contentData', 'conversations', 'newChatRecord', 'chosenTempChat'],
         data () {
             return {
                 color1: false,
@@ -136,13 +147,22 @@
                 chatRecords: null,
                 isSelf: null,
                 showLeft: true,
-                chatMessage: ''
+                chatMessage: '',
+                dialogVisible: false,
+                files: null,
+                treeData: [],
+                typeName: ['视频', '文档', '音乐', '图片'],
+                defaultProps: {
+                    children: 'content',
+                    label: 'label'
+                }
             }
         },
         components: {
             chatRecord
         },
         mounted () {
+            console.log(this.conversations)
         },
         watch: {
             newChatRecord: {
@@ -152,14 +172,57 @@
                         return false
                     } else if (((oldV === null || oldV === undefined) && newV) || newV[0] !== oldV[0]) {
                         this.dealNewChatRecord(newV)
+                        this.scrollToBottom()
                     }
                 },
                 deep: true
+            },
+            chosenTempChat: {
+                handler (newV) {
+                    console.log(newV)
+                    if (newV !== null && newV !== undefined) {
+                        this.chosenConversation = newV
+                        this.showChat()
+                    }
+                }
             }
         },
         methods: {
+            shareFile () {
+                this.get('/file/getFileTree', {
+                    'userId': JSON.parse(localStorage.getItem('userInfo')).id
+                }).then(res => {
+                    this.files = res.data.data
+                    for (let i = 0; i < this.typeName.length; i++) {
+                        let data = {}
+                        let treeType = this.typeName[i]
+                        data.label = treeType
+                        switch (treeType) {
+                        case '视频':
+                            data.children = this.files.视频
+                            break
+                        case '图片':
+                            data.children = this.files.图片
+                            break
+                        case '音乐':
+                            data.children = this.files.音乐
+                            break
+                        case '文档':
+                            data.children = this.files.文档
+                            break
+                        }
+                        for (let j = 0; j < data.children.length; j++) {
+                            data.children[j].content = data.children[j].fileName
+                        }
+                        this.treeData.push(data)
+                    }
+                    console.log(this.treeData)
+                    this.dialogVisible = true
+                })
+            },
             dealNewChatRecord (newV) {
                 let item = newV[0]
+                console.log(item)
                 item.createdDate = this.$moment(item.createdDate).format('YYYY-MM-DD HH:mm:ss')
                 item.modifiedDate = this.$moment(item.modifiedDate).format('YYYY-MM-DD HH:mm:ss')
                 if (item.sendUser === this.userInfo.id) {
@@ -195,6 +258,7 @@
                     var div = document.getElementById('chatRecords')
                     console.log(div.scrollHeight)
                     div.scrollTop = div.scrollHeight
+                    console.log(div.scrollTop)
                 })
             },
             test (item) {
@@ -266,7 +330,11 @@
             async showChat (index) {
                 this.chosenUser = null
                 this.isChat = true
-                this.chosenConversation = this.conversations[index]
+                if (index !== undefined) {
+                    this.chosenConversation = this.conversations[index]
+                } else {
+                    this.chosenConversation.id = this.chosenTempChat.conversationId
+                }
                 let res = await this.get('/chatRecord/getChatRecord', {
                     'id': this.chosenConversation.id
                 })

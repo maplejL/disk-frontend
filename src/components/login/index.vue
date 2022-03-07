@@ -77,7 +77,7 @@
             <el-form
                     :model="registerForm"
                     :rules="ruleValidate"
-                    ref="loginForm"
+                    ref="registerForm"
                     label-width="0px"
             >
                 <el-form-item
@@ -128,7 +128,7 @@
                         <el-col :span='19'>
                             <el-input
                                     class="inps"
-                                    placeholder='邮箱'
+                                    placeholder='请输入邮箱'
                                     v-model="registerForm.email"
                             ></el-input>
                         </el-col>
@@ -146,7 +146,7 @@
                         <el-col :span='19'>
                             <el-input
                                     class="inps"
-                                    placeholder='城市'
+                                    placeholder='请输入城市'
                                     v-model="registerForm.city"
                             ></el-input>
                         </el-col>
@@ -164,7 +164,7 @@
                         <el-col :span='19'>
                             <el-input
                                     class="inps"
-                                    placeholder='性别'
+                                    placeholder='默认性别为男'
                                     v-model="registerForm.sex"
                             ></el-input>
                         </el-col>
@@ -218,31 +218,7 @@
                     ],
                     password: [
                         {required: true, message: '密码不能为空', trigger: 'blur'}
-                    ],
-                    email: [
-                        {required: true, message: '邮箱不能为空', trigger: 'blur'},
-                        {type: 'email', message: '邮箱格式不正确', trigger: 'blur'}
-                    ],
-                    city: [
-                        {required: true, message: '请选择城市', trigger: 'change'}
-                    ],
-                    sex: [
-                        {required: true, message: '请选择性别', trigger: 'change'}
                     ]
-                    // interest: [
-                    //     { required: true, type: 'array', min: 1, message: '至少选择一个爱好', trigger: 'change' },
-                    //     { type: 'array', max: 2, message: '最多选择两个爱好', trigger: 'change' }
-                    // ],
-                    // date: [
-                    //     { required: true, type: 'date', message: '请选择日期', trigger: 'change' }
-                    // ],
-                    // time: [
-                    //     { required: true, type: 'date', message: '请选择时间', trigger: 'change' }
-                    // ],
-                    // desc: [
-                    //     { required: true, message: '请输入个人介绍', trigger: 'blur' },
-                    //     { type: 'string', min: 20, message: '介绍不能少于20字', trigger: 'blur' }
-                    // ]
                 },
                 shadowColorList: [
                     '#39f',
@@ -308,6 +284,9 @@
                     ],
                     city: [
                         {required: true, message: '请选择城市', trigger: 'change'}
+                    ],
+                    sex: [
+                        {required: true, message: '请选择性别', trigger: 'change'}
                     ]
                     // sex: [
                     //     { required: true, message: '请选择性别', trigger: 'change' }
@@ -324,8 +303,18 @@
             this.get('/user/getPublicKey').then(res => {
                 global.setPublicKey(res.data.data.publicKey)
             })
+            // window.addEventListener('keydown', this.keyDown)
         },
         methods: {
+            // keyDown (e) {
+            //     console.log(e)
+            //     console.log(this.loginForm)
+            //     // 如果是回车则执行登录方法
+            //     if (e.keyCode === 13) {
+            //         console.log('111')
+            //         this.submitForm()
+            //     }
+            // },
             changeView () {
                 this.showLogin = 0
             },
@@ -333,8 +322,9 @@
                 let encryptor = new JSEncrypt()
                 encryptor.setPublicKey(this.global.publicKey)
                 this.registerForm.password = encryptor.encrypt(this.registerForm.password)
-                this.axios.post('/user/register', this.registerForm).then(res => {
-                    console.log(res)
+                this.post('/user/register', this.registerForm).then(res => {
+                    this.$message.success('注册成功,请登录')
+                    this.showLogin = 1
                 })
             },
             cancelRegister () {
@@ -346,7 +336,9 @@
                 encryptor.setPublicKey(this.global.publicKey)
                 this.loginForm.password = encryptor.encrypt(this.loginForm.password)
                 // let res = await this.post('/user/login', this.loginForm)
-                this.post('/user/login', this.loginForm).catch(error => {
+                this.post('/user/login', this.loginForm).then(res => {
+                    // window.removeEventListener('keydown', this.keyDown, false)
+                }).catch(error => {
                     if (error.response.data.status === 444) {
                         setTimeout(() => {
                             MessageBox({
@@ -365,15 +357,6 @@
                         }, 1000)
                     }
                 })
-                // console.log(res)
-                // await localStorage.setItem('userInfo', JSON.stringify(res.data.data.userInfo))
-                // await localStorage.setItem('token', JSON.stringify(res.data.data.token))
-                // await console.log(localStorage.setItem('userInfo', JSON.stringify(res.data.data.userInfo)))
-                // await this.initWebSocket()
-                // this.$message.success('登陆成功，2s后自动跳转')
-                // setTimeout(() => {
-                //     this.$router.push({path: '/homePage'})
-                // }, 2000)
             },
             initWebSocket () {
                 let userInfo = JSON.parse(localStorage.getItem('userInfo'))

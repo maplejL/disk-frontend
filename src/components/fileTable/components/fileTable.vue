@@ -5,25 +5,41 @@
                 <li v-for="i in count" class="infinite-list-item" :key="i">{{ i }}</li>
             </ul>
         </div>
-        <div style="float: left" v-if="typeCode !== 0">
-            <table>
-                <tr>
-                    <td>
-                        <upload :typeCode="typeCode"
-                                @refreshData="refreshData"
-                        ></upload>
-                    </td>
-                    <td style="position: relative">
-                        <el-button size="small"
-                                   type="danger"
-                                   style="position: absolute;top: 0px;margin-left: 15px"
-                                   @click="deleteFile">批量删除</el-button>
-                    </td>
-                </tr>
-            </table>
+        <div style="float: left;width: 100%;" v-if="typeCode !== 0">
+            <div style="display: inline;width: 200px;float: left">
+                <table>
+                    <tr>
+                        <td>
+                            <upload :typeCode="typeCode"
+                                    @refreshData="refreshData"
+                            ></upload>
+                        </td>
+                        <td style="position: relative">
+                            <el-button size="small"
+                                       type="danger"
+                                       style="position: absolute;top: 0px;margin-left: 15px"
+                                       @click="deleteFile">批量删除
+                            </el-button>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div style="display: inline;float: right;margin-right: 100px;">
+                <el-input placeholder="请输入内容"
+                          v-model="searchInput"
+                          class="input-with-select"
+                          maxlength="20"
+                          size="medium"
+                          @input="watchInput"
+                          @focus="watchInput"
+                          >
+                    <i slot="suffix" style="position:relative;top: 8px;cursor: pointer;right: 10px" @click="doSearch">|&nbsp;搜索</i>
+
+                </el-input>
+            </div>
             <!--        <video v-show = "isPlay === 1"></video>-->
             <div class='mask' v-if='isPlay == 1' @click='masksCloseFun'></div>
-            <div class="videomasks" v-if="isPlay == 1">
+            <div class="videomasks" v-if="isPlay == 1 && typeCode === 1">
                 <VideoPlayer :options="videoOptions" class="video"></VideoPlayer>
             </div>
 
@@ -31,7 +47,7 @@
                     :data="tableData"
                     height="500px"
                     :highlight-current-row="true"
-                    style="width: 90%"
+                    style="width: 90%;"
                     @row-click="toDetail"
                     @cell-mouse-enter="cellMouseEnter"
                     @cell-mouse-leave="cellMouseLeave"
@@ -43,15 +59,15 @@
                         width="55">
                 </el-table-column>
                 <el-table-column width="70px" v-viewer.static="{inline: true}">
-                    <template slot-scope="scope">
-                        <el-image v-if="scope.row.typeCode !== 1"
+                    <template slot-scope="scope" v-if="scope.row.typeCode !== 2">
+                        <el-image v-if="scope.row.typeCode === 4 "
                                   :src="scope.row.url"
                                   @click="setSrc(scope.row.url, scope.row.typeCode)"
                                   style="height: 50px;cursor: pointer;"
                                   fit="scale-down"
                         >
                         </el-image>
-                        <el-image v-else
+                        <el-image v-else-if="scope.row.typeCode === 1"
                                   :src="scope.row.thumbnailName"
                                   style="height: 50px;cursor: pointer;"
                                   @click="setSrc(scope.row.url, scope.row.typeCode)"
@@ -78,15 +94,24 @@
                                     style="width: 360px"
                             ></el-input>
                             <button class="refactor" @click="refactorFile">
-                                <i class="el-icon-check" />
+                                <i class="el-icon-check"/>
                             </button>
                             <button class="refactor" @click="refactorId = null">
-                                <i class="el-icon-close" />
+                                <i class="el-icon-close"/>
                             </button>
                         </div>
-                        <span v-else style="cursor: pointer"
-                              @click="setSrc(scope.row.url, scope.row.typeCode)"
-                        >{{scope.row.fileName}}</span>
+                        <div v-else>
+                            <el-tooltip class="item" style="cursor: pointer" effect="dark" content="点击预览此文件" placement="top-start">
+                                <span @click="setSrc(scope, scope.row.url, scope.row.typeCode)">
+                                    {{scope.row.fileName}}
+                                </span>
+                            </el-tooltip>
+                        </div>
+<!--                        <span v-else class="tooltip" data-tooltip="123"-->
+<!--                              @click="setSrc(scope.row.url, scope.row.typeCode)"-->
+<!--                        >-->
+<!--                            {{scope.row.fileName}}-->
+<!--                        </span>-->
                     </template>
                 </el-table-column>
                 <el-table-column
@@ -99,7 +124,7 @@
                     <template slot-scope="scope">
                         <div v-show="scope.row.id === hoverId">
                             <i class="el-icon-share" v-bind:title="share"></i>
-                            <i class="el-icon-download" @click="download(scope.row.url)" v-bind:title="down"></i>
+                            <i class="el-icon-download" @click="download(scope.row.id)" v-bind:title="down"></i>
                             <el-dropdown trigger="click" placement="bottom" @command="handleCommand">
                             <span class="el-dropdown-link">
                                 <i class="el-icon-more" v-bind:title="more"></i>
@@ -128,6 +153,10 @@
 <style scoped lang="less">
     /deep/ .el-image-viewer__wrapper {
         height: 50%;
+    }
+
+    /deep/ .is-scrolling-left {
+        overflow-x: hidden;
     }
 
     /deep/ .el-icon-more {
@@ -182,6 +211,36 @@
         left: 0px;
         right: 0px;
     }
+
+    .tooltip:hover{
+        cursor:pointer;
+    }
+    .tooltip:hover:before{
+        content:attr(data-tooltip);
+        background:#d9444a;
+        color:#fff;
+        padding:.8em 1em;
+        position:absolute;
+        left:100%;
+        top:-70%;
+        margin-left:14px;
+        white-spack:pre;
+    }
+    .tooltip:hover:after{
+        content:" ";
+        position:absolute;
+        left:80%;
+        width:0;
+        height:0;
+        /*border-right:8px solid #d9444a;*/
+        /*border-top:8px solid transpatrnt;*/
+        /*border-bottom:8px solid transparent;*/
+    }
+
+    /deep/ .el-input__inner {
+        border-radius: 20px
+    }
+
 </style>
 
 <script>
@@ -205,14 +264,18 @@
                 count: 0,
                 more: '更多',
                 videoState: false,
+                searchInput: '',
                 isSelect: 0,
                 hoverId: null,
                 hoverData: null,
                 refactorId: null,
                 deleteOne: 0,
+                audioSrc: '',
+                audioName: 'unknown',
+                audioArtist: 'unknown',
                 refactorData: null,
                 videoOptions: {
-                    autoplay: '', // 自动播放
+                    autoplay: false, // 自动播放
                     controls: true, // 用户可以与之交互的控件
                     loop: true, // 视频一结束就重新开始
                     muted: false, // 默认情况下将使所有音频静音
@@ -237,6 +300,15 @@
             video
         },
         methods: {
+            doSearch () {
+                this.$emit('doSearch', this.searchInput)
+            },
+            watchInput (val) {
+                if (val.length === 20) {
+                    console.log(val.length)
+                    this.$message.info('输入框字数限制为20字')
+                }
+            },
             refreshData () {
                 this.$emit('refreshData')
             },
@@ -310,11 +382,22 @@
                     })
                 this.$message.success('删除成功')
             },
-            download (url) {
-                this.get('/file/download', {
-                    url: url
-                }).then(res => {
-                    console.log(res)
+            download (id) {
+                this.$confirm('确定下载此文件吗?', '提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    type: 'warning'
+                }).then(() => {
+                    this.get('/file/download', {
+                        id: id
+                    }).then(res => {
+                        console.log(res)
+                    })
+                }).catch(() => {
+                    this.$message({
+                        type: 'info',
+                        message: '已取消下载'
+                    })
                 })
             },
             ok () {
@@ -323,15 +406,24 @@
             cancel () {
                 this.$Message.info('点击了取消')
             },
-            setSrc (url, typeCode) {
+            setSrc (scope, url, typeCode) {
                 if (typeCode === 1) {
                     this.isPlay = 1
                     this.showViewer = 0
                     this.videoOptions.sources[0].src = url
-                } else {
+                } else if (typeCode === 4) {
                     this.srcList = []
                     this.srcList.push(url)
                     this.showViewer = 1
+                } else if (typeCode === 2) {
+                    this.$message.success('正在打开文档')
+                    setTimeout(() => {
+                        this.get('/file/preview', {
+                            'url': url
+                        })
+                    }, 1000)
+                } else {
+                    this.$emit('setAudio', scope.row)
                 }
             },
             closeViewer () {
@@ -341,6 +433,7 @@
                 this.isPlay = 0
             },
             toDetail (row) {
+                this.$emit('setAudio', row)
                 this.$emit('toDetail', row)
             },
             play (url) {

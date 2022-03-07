@@ -6,9 +6,14 @@
                    @toDetail="toDetail"
                    ref="fileTable"
                    @refreshData="refreshData"
-                   @loadFile="loadFile"></fileTable>
+                   @loadFile="loadFile"
+                   @setAudio="setAudio"
+                   @doSearch="doSearch"></fileTable>
         <div class="detail">
-            <fileDetail :data="detail" @play="play" ref="fileDetail" v-if="typeCode !== 0"></fileDetail>
+            <fileDetail :data="detail" @play="play"
+                        ref="fileDetail"
+                        v-if="typeCode !== 0"
+                        :typeCode="typeCode" :audioSrc="audioSrc" :audioName="audioName" :audioArtist="audioArtist"></fileDetail>
         </div>
         <div class="block" style="float: left; position:relative; top: 20px" v-if="typeCode !== 0">
             <el-pagination
@@ -42,7 +47,11 @@
                 detail: null,
                 pageSize: 5,
                 pageNo: 0,
-                currentPage: 0
+                currentPage: 0,
+                audioSrc: 'https://disk-1305749742.cos-website.ap-shanghai.myqcloud.com/mall/61801646116563162.mp3',
+                audioName: 'unknown',
+                audioArtist: 'unknown',
+                input: null
             }
         },
         mounted () {
@@ -50,6 +59,18 @@
             console.log(this.typeCode)
         },
         methods: {
+            doSearch (input) {
+                console.log()
+                this.input = input
+                this.$emit('doSearch', this.pageNo, this.pageSize, input)
+            },
+            setAudio (row) {
+                this.audioSrc = row.url
+                let fileName = row.fileName.split('-')
+                this.audioName = fileName[1].replace(' ', '')
+                this.audioArtist = fileName[0].replace(' ', '')
+                console.log(this.audioSrc)
+            },
             refreshData () {
                 this.$emit('refreshData')
             },
@@ -66,20 +87,28 @@
             handleSizeChange (val) {
                 console.log(`每页 ${val} 条`)
                 this.pageSize = val
-                this.loadFile()
+                if (this.input !== null) {
+                    this.doSearch(this.input)
+                } else {
+                    this.loadFile()
+                }
             },
             handleCurrentChange (val) {
                 console.log(val)
                 this.pageNo = val - 1
-                this.loadFile()
+                if (this.input !== null) {
+                    this.doSearch(this.input)
+                } else {
+                    this.loadFile()
+                }
             },
-            changePage (pageSize, pageNo) {
-                this.pageSize = pageSize
-                this.pageNo = pageNo
-                this.loadFile()
-            },
+            // changePage (pageSize, pageNo) {
+            //     this.pageSize = pageSize
+            //     this.pageNo = pageNo
+            //     this.loadFile()
+            // },
             loadFile () {
-                this.$emit('loadFile', this.pageNo)
+                this.$emit('loadFile', this.pageNo, this.pageSize)
             }
         }
     }
