@@ -5,6 +5,52 @@
                 <li v-for="i in count" class="infinite-list-item" :key="i">{{ i }}</li>
             </ul>
         </div>
+        <div>
+            <el-dialog
+                    title="请选择分享方式"
+                    :visible.sync="chooseShare">
+                <el-form>
+                    <el-form-item>
+                        <el-radio v-model="radio" label="1">生成链接</el-radio>
+                        <el-radio v-model="radio" label="2">分享好友</el-radio>
+                    </el-form-item>
+                    <el-form-item label="公司类型">
+                        <el-select v-model="validityPeriod" >
+                            <el-option label="请选择" value=""></el-option>
+                            <el-option v-for="item in validityPeriods" :key="item.id" :label="item.value" :value="item.value">
+                            </el-option>
+                        </el-select>
+                    </el-form-item>
+                </el-form>
+                <span slot="footer" class="dialog-footer">
+                    <el-button @click="handleCloseShare">取 消</el-button>
+                    <el-button type="primary" @click="handleShare">确 定</el-button>
+                </span>
+            </el-dialog>
+        </div>
+        <div>
+            <el-dialog title="分享二维码" :visible.sync="generateLink" width="300px">
+                <img :src="qrcodeUrl">
+            </el-dialog>
+        </div>
+        <div>
+            <el-dialog
+                    title="好友分享"
+                    :visible.sync="dialogVisible">
+                <el-transfer
+                        v-show="friendList !== null"
+                        filterable
+                        :filter-method="filterMethod"
+                        filter-placeholder="请输入搜索内容"
+                        :titles="['好友列表','已选择']"
+                        v-model="chosenFriends"
+                        :data="friendList">
+                    <el-button class="transfer-footer" slot="right-footer"
+                               style="float: right;margin-top: 4px" size="small"
+                               @click="doShare">分享</el-button>
+                </el-transfer>
+            </el-dialog>
+        </div>
         <div style="float: left;width: 100%;" v-if="typeCode !== 0">
             <div style="display: inline;width: 200px;float: left">
                 <table>
@@ -123,7 +169,7 @@
                     <!--                <span v-show="isHover === 1">123</span>-->
                     <template slot-scope="scope">
                         <div v-show="scope.row.id === hoverId">
-                            <i class="el-icon-share" v-bind:title="share"></i>
+                            <i class="el-icon-share" v-bind:title="share" @click="chooseShareMethod(scope.row.id)"></i>
                             <i class="el-icon-download" @click="download(scope.row.id)" v-bind:title="down"></i>
                             <el-dropdown trigger="click" placement="bottom" @command="handleCommand">
                             <span class="el-dropdown-link">
@@ -174,6 +220,11 @@
         color: #2baee9;
         margin-right: 10px;
         cursor: pointer;
+    }
+
+    /deep/ .el-transfer {
+        width: 600px;
+        margin: auto;
     }
 
     .refactor {
@@ -251,19 +302,37 @@
 
     export default {
         name: 'fileTable',
-        props: ['tableData', 'typeCode'],
+        props: ['tableData', 'typeCode', 'userInfo'],
         data () {
             return {
                 srcList: [],
+                validityPeriod: '',
+                validityPeriods: [{
+                    value: '永久有效',
+                    id: '1'
+                }, {
+                    value: '30天',
+                    id: '2'
+                }, {
+                    value: '7天',
+                    id: '3'
+                }, {
+                    value: '1天',
+                    id: '4'
+                }],
                 showViewer: 0,
+                dialogVisible: false,
                 isPlay: 0,
                 isPop: true,
                 isHover: 0,
                 share: '分享',
                 down: '下载',
+                radio: '1',
                 count: 0,
                 more: '更多',
                 videoState: false,
+                chooseShare: false,
+                generateLink: false,
                 searchInput: '',
                 isSelect: 0,
                 hoverId: null,
@@ -274,6 +343,12 @@
                 audioName: 'unknown',
                 audioArtist: 'unknown',
                 refactorData: null,
+                chosenFriends: [],
+                qrcodeUrl: '',
+                friendList: [],
+                imrUrl: '',
+                friends: null,
+                chosenFileId: null,
                 videoOptions: {
                     autoplay: false, // 自动播放
                     controls: true, // 用户可以与之交互的控件
@@ -300,6 +375,63 @@
             video
         },
         methods: {
+            handleCloseShare () {
+                this.chooseShare = false
+                this.radio = '1'
+            },
+            handleShare () {
+                this.chooseShare = false
+                if (this.radio === '2') {
+                    this.getFriends()
+                } else {
+                    this.get('/file/generateQRCode', {'fileId': this.chosenFileId}).then(res => {
+                        this.qrcodeUrl = 'data:image/png;base64,' + res.data.data
+                        this.generateLink = true
+                    })
+                }
+            },
+            chooseShareMethod (fileId) {
+                this.chooseShare = true
+                this.chosenFileId = fileId
+            },
+            getFriends () {
+                this.get('/user/getFriends', {
+                    'id': this.userInfo.id
+                }).then(res => {
+                    this.friendList = []
+                    let data = res.data.data
+                    data.forEach((item, index) => {
+                        this.friendList.push({
+                            label: item.username,
+                            key: index
+                        })
+                    })
+                    this.friends = data
+                    this.dialogVisible = true
+                })
+            },
+            doShare () {
+                let chosenUserIds = []
+                this.chosenFriends.forEach((item, index) => {
+                    let username = this.friendList[item].label
+                    this.friends.forEach((item, index) => {
+                        if (item.username === username) {
+                            chosenUserIds.push(item.id)
+                        }
+                    })
+                })
+                this.get('/file/share', {
+                    'fileId': this.chosenFileId,
+                    'userIds': JSON.stringify(chosenUserIds)
+                }).then(res => {
+                    this.$message.success('分享成功')
+                    this.dialogVisible = false
+                })
+            },
+            filterMethod (query, item) {
+                console.log(query, item)
+                return item.label.indexOf(query) > -1
+            },
             doSearch () {
                 this.$emit('doSearch', this.searchInput)
             },

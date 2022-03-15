@@ -1,68 +1,6 @@
 <template>
     <div class="layout">
         <Layout>
-            <Header style="margin-bottom: 20px">
-                <Menu mode="horizontal" theme="dark" active-name="1">
-                    <div>
-                        <img src="static/image/logo.png"
-                             style="height: 60px;width: 200px;float: left;cursor: pointer"
-                             @click="home"
-                        >
-                    </div>
-                    <div class="layout-nav">
-                        <MenuItem name="1">
-                            <Icon type="ios-navigate"></Icon>
-                            <span v-if="userInfo === null" @click="doLogin">登录</span>
-                            <el-dropdown v-else>
-                                  <span class="el-dropdown-link" style="color: white">
-                                    欢迎, {{userInfo === null?'1':userInfo.username}}<i
-                                          class="el-icon-arrow-down el-icon--right"></i>
-                                  </span>
-                                <el-dropdown-menu slot="dropdown">
-                                    <span><b>个人设置</b></span>
-                                    <el-divider></el-divider>
-                                    <el-dropdown-item icon="el-icon-circle-plus" @click.native="personInfo">
-                                        个人信息
-                                    </el-dropdown-item>
-                                    <el-dropdown-item icon="el-icon-circle-plus-outline"
-                                                      @click.native="isUpdatePass = true">修改密码
-                                    </el-dropdown-item>
-                                    <el-dropdown-item icon="el-icon-check" @click.native="doLogout">退出登录
-                                    </el-dropdown-item>
-                                </el-dropdown-menu>
-                            </el-dropdown>
-                        </MenuItem>
-<!--                        <MenuItem name="2">-->
-<!--                            <Icon type="ios-keypad"></Icon>-->
-<!--                            item 2-->
-<!--                        </MenuItem>-->
-                        <MenuItem name="3" @click.native="toChat">
-                            <el-badge :value="tempChatsCount" class="item">
-                                <span style="width: 50%;color: white;" v-show="tempChatsCount === 0">聊天</span>
-                                <el-dropdown trigger="hover" v-show="tempChatsCount !== 0">
-                                    <span class="el-dropdown-link" style="color: white">
-                                    聊天<i class="el-icon-arrow-down el-icon--right"></i>
-                                  </span>
-                                    <el-dropdown-menu slot="dropdown"
-                                                      divided="true"
-                                                      style="width: 300px; position:relative; left: 100px;height: 600px;overflow-y: auto"
-                                    >
-                                        <el-dropdown-item v-for="(item, index) in tempChats" :key="index" @click.native="clickTempChat(item)">
-                                            <span style="float: left;width: auto;word-break: normal">{{item.content}}</span>
-                                            <br/>
-                                            <span style="float: left">{{item.conversationName}}</span>
-                                            <span style="float: right">
-                                                {{item.modifiedDate}}
-                                            </span>
-                                            <br/>
-                                        </el-dropdown-item>
-                                    </el-dropdown-menu>
-                                </el-dropdown>
-                            </el-badge>
-                        </MenuItem>
-                    </div>
-                </Menu>
-            </Header>
             <chat v-show="ischat===1" :userInfo="userInfo" :contentData="friendsData"
                   :conversations="conversations" :newChatRecord="newChatRecord" :chosenTempChat="chosenTempChat" ref="chat"></chat>
             <Layout v-show="ischat === 0" :style="{padding: '0 20px'}">
@@ -94,7 +32,15 @@
                                         <i class="el-icon-share"></i>
                                         我的分享
                                     </template>
-                                    <MenuItem name="分享记录">分享记录</MenuItem>
+                                    <Submenu name="共享文件">
+                                        <template slot="title">
+                                            共享文件
+                                        </template>
+                                        <MenuItem name="共享视频">视频</MenuItem>
+                                        <MenuItem name="共享文档">文档</MenuItem>
+                                        <MenuItem name="共享音乐">音乐</MenuItem>
+                                        <MenuItem name="共享图片">图片</MenuItem>
+                                    </Submenu>
                                     <MenuItem name="我的消息">我的消息</MenuItem>
                                 </Submenu>
                                 <Submenu name="回收站">
@@ -116,6 +62,7 @@
                                   @refreshData="loadFile"
                                   @doSearch="doSearch"
                                   v-show="showRubbish === 0"
+                                  :userInfo="userInfo"
                                   @loadFile="loadFile"></file>
                             <rubbish v-show="showRubbish === 1"
                                      :tableData="deleteFiles"
@@ -530,6 +477,10 @@
             },
             async websocketonmessage (e) {
                 console.log(e)
+                if (e.data === '您有新的分享文件') {
+                    this.$message.info(e.data)
+                    return
+                }
                 let data = await JSON.parse(e.data)
                 if (data && data.tempChat) {
                     this.tempChats = await data.tempChat
@@ -600,6 +551,8 @@
                 this.showRubbish = 0
                 this.$route.query.typeName = e
                 this.typeName = e
+                let isShare = 0
+                console.log(e)
                 switch (this.typeName) {
                 case '全部':
                     this.typeCode = 0
@@ -617,8 +570,28 @@
                 case '图片':
                     this.typeCode = 4
                     break
+                case '共享视频':
+                    this.typeCode = 1
+                    isShare = 1
+                    break
+                case '共享文档':
+                    this.typeCode = 2
+                    isShare = 1
+                    break
+                case '共享音乐':
+                    this.typeCode = 3
+                    isShare = 1
+                    break
+                case '共享图片':
+                    this.typeCode = 4
+                    isShare = 1
+                    break
                 }
-                this.loadFile()
+                if (isShare === 0) {
+                    this.loadFile()
+                } else {
+                    this.loadSharedFile()
+                }
             },
             async getFolders () {
                 let res = await this.get('/folders/getFolders')
@@ -661,6 +634,40 @@
                         item.modifiedDate = this.$moment(item.modifiedDate).format('YYYY-MM-DD HH:mm:ss')
                     })
                     this.totalFiles = res.data.total
+                })
+            },
+            loadSharedFile (pageNo, pageSize, input) {
+                if (pageNo !== null && pageNo !== undefined) {
+                    this.pageNo = pageNo
+                }
+                console.log(pageSize)
+                if (pageSize !== null && pageSize !== undefined) {
+                    this.pageSize = pageSize
+                }
+                let params = {}
+                params.pageSize = this.pageSize
+                params.pageNo = this.pageNo
+                params.typeCode = this.typeCode
+                if (input !== null || input !== undefined) {
+                    params.input = input
+                } else {
+                    params.input = null
+                }
+                console.log(params)
+                this.post('/file/getShareFiles', {
+                    'pageSize': params.pageSize,
+                    'pageNo': params.pageNo,
+                    'typeCode': params.typeCode,
+                    'input': params.input
+                }).then((res) => {
+                    console.log(res)
+                    this.fileList = res.data.data.sharedFiles
+                    this.fileList.forEach(item => {
+                        item.createdDate = this.$moment(item.createdDate).format('YYYY-MM-DD HH:mm:ss')
+                        item.modifiedDate = this.$moment(item.modifiedDate).format('YYYY-MM-DD HH:mm:ss')
+                    })
+                    this.totalFiles = res.data.total
+                    console.log(this.fileList)
                 })
             }
         }

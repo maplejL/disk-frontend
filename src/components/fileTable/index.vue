@@ -2,6 +2,7 @@
     <div>
         <fileTable :tableData="fileList"
                    :typeCode="typeCode"
+                   :userInfo="userInfo"
                    class="fileTable"
                    @toDetail="toDetail"
                    ref="fileTable"
@@ -37,7 +38,7 @@
     import fileDetail from './components/fileDetail'
     export default {
         name: 'file',
-        props: ['fileList', 'typeCode', 'total'],
+        props: ['fileList', 'typeCode', 'total', 'userInfo'],
         components: {
             fileTable,
             fileDetail
