@@ -31,9 +31,10 @@ instance.interceptors.request.use(config => {
         })
     }
     if (config.url.includes('/file/download')) {
-        loadingInstance = Loading.service({
-            text: '下载中...'
-        })
+        loadingInstance = null
+        // loadingInstance = Loading.service({
+        //     text: '下载中...'
+        // })
     } else if (config.url.includes('/chatRecord/send')) {
         loadingInstance = null
     } else if (config.url.includes('/file/upload')) {

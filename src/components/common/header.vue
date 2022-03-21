@@ -23,7 +23,7 @@
                                 个人信息
                             </el-dropdown-item>
                             <el-dropdown-item icon="el-icon-circle-plus-outline"
-                                              @click.native="isUpdatePass = true">修改密码
+                                              @click.native="updatePass">修改密码
                             </el-dropdown-item>
                             <el-dropdown-item icon="el-icon-check" @click.native="doLogout">退出登录
                             </el-dropdown-item>
@@ -36,7 +36,7 @@
                 <!--                        </MenuItem>-->
                 <MenuItem name="3" @click.native="toChat">
                     <el-badge :value="tempChatsCount" class="item">
-                        <span style="width: 50%;color: white;" v-show="tempChatsCount === 0">聊天</span>
+                        <span style="width: 100px;color: white;" v-show="tempChatsCount === 0">聊天</span>
                         <el-dropdown trigger="hover" v-show="tempChatsCount !== 0">
                                     <span class="el-dropdown-link" style="color: white">
                                     聊天<i class="el-icon-arrow-down el-icon--right"></i>
@@ -63,21 +63,103 @@
     </Header>
 </template>
 
-<style>
+<style scoped>
+    .layout {
+        border: 1px solid #d7dde4;
+        background: #f5f7f9;
+        position: relative;
+        border-radius: 4px;
+        overflow: hidden;
+        height: 100%;
+    }
+
+    .layout-logo {
+        width: 100px;
+        height: 30px;
+        background: #5b6270;
+        border-radius: 3px;
+        float: left;
+        position: relative;
+        top: 15px;
+        left: 20px;
+    }
+
+    .layout-nav {
+        width: 300px;
+        margin: 0 auto;
+        margin-right: 20px;
+    }
+
+    .layout-footer-center {
+        margin-top: -10px;
+        text-align: center;
+    }
+
+    #menu {
+        height: 700px;
+    }
+
+    #breadcrumb {
+        margin: 16px 0px;
+        float: left;
+    }
+
+    .el-divider--horizontal {
+        margin: 0px 0;
+        background-color: black;
+        height: 1px;
+    }
+
+    .el-descriptions-item__cell el-descriptions-item__label is-bordered-label {
+        width: 100px;
+    }
+    .item {
+    }
+    /deep/ .item sup{
+        position: relative;
+    }
+
+    .refactor {
+        width: 38px;
+        height: 38px;
+        background-color: white;
+        border: 0px;
+        cursor: pointer;
+    }
 
 </style>
 
 <script>
     export default {
-        name: 'header',
+        name: 'pageHead',
+        props: ['userInfo', 'tempChatsCount', 'tempChats'],
         data () {
             return {
-
             }
         },
         methods: {
+            updatePass () {
+                this.$emit('updatePass')
+            },
             home () {
-                this.ischat = 0
+                this.$emit('home')
+            },
+            doLogin () {
+                this.$router.push({
+                    name: 'login'
+                })
+            },
+            personInfo () {
+                this.$emit('personInfo')
+            },
+            doLogout () {
+                this.$emit('doLogout')
+            },
+            toChat () {
+                this.$emit('toChat')
+            },
+            clickTempChat (item) {
+                this.$emit('clickTempChat', item)
             }
         }
     }

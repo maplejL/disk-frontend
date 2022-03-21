@@ -1,14 +1,24 @@
 <template>
     <div class="layout">
         <Layout>
+            <pageHead @personInfo="personInfo"
+                      :userInfo="userInfo"
+                      @doLogout="doLogout"
+                      :tempChatsCount="tempChatsCount"
+                      @toChat="toChat"
+                      @updatePass="updatePass"
+                      @home="home"
+                      :tempChats="tempChats"
+                      @clickTempChat="clickTempChat"></pageHead>
             <chat v-show="ischat===1" :userInfo="userInfo" :contentData="friendsData"
-                  :conversations="conversations" :newChatRecord="newChatRecord" :chosenTempChat="chosenTempChat" ref="chat"></chat>
+                  :conversations="conversations" :newChatRecord="newChatRecord" :chosenTempChat="chosenTempChat"
+                  ref="chat"></chat>
             <Layout v-show="ischat === 0" :style="{padding: '0 20px'}">
-<!--                <Breadcrumb :style="{margin: '16px 0'}">-->
-<!--                    <Breadcrumb.Item>Home</Breadcrumb.Item>-->
-<!--                    <Breadcrumb.Item>List</Breadcrumb.Item>-->
-<!--                    <Breadcrumb.Item>App</Breadcrumb.Item>-->
-<!--                </Breadcrumb>-->
+                <!--                <Breadcrumb :style="{margin: '16px 0'}">-->
+                <!--                    <Breadcrumb.Item>Home</Breadcrumb.Item>-->
+                <!--                    <Breadcrumb.Item>List</Breadcrumb.Item>-->
+                <!--                    <Breadcrumb.Item>App</Breadcrumb.Item>-->
+                <!--                </Breadcrumb>-->
                 <Content :style="{padding: '24px 0', minHeight: '280px', background: '#fff'}">
                     <Layout v-model="name">
                         <Sider hide-trigger :style="{background: '#fff'}">
@@ -81,7 +91,8 @@
                                 <i class="el-icon-user"></i>
                                 用户名
                             </template>
-                            <span v-show="refactorUsername === false" style="margin-top: 10px">{{userInfo.username}}</span>
+                            <span v-show="refactorUsername === false"
+                                  style="margin-top: 10px">{{userInfo.username}}</span>
                             <div v-show="refactorUsername === true" style="display: inline;width: 450px">
                                 <el-input
                                         type="text"
@@ -96,7 +107,7 @@
                                 </button>
                             </div>
                             <div style="float: right;display: inline;">
-                                <el-button type="primary" size="small"  @click="refactor('name')">修改</el-button>
+                                <el-button type="primary" size="small" @click="refactor('name')">修改</el-button>
                             </div>
                         </el-descriptions-item>
                         <el-descriptions-item>
@@ -104,7 +115,8 @@
                                 <i class="el-icon-mobile-phone"></i>
                                 手机号
                             </template>
-                            <span v-show="refactorUserPhone === false" style="margin-top: 10px">{{userInfo.phone}}</span>
+                            <span v-show="refactorUserPhone === false"
+                                  style="margin-top: 10px">{{userInfo.phone}}</span>
                             <div v-show="refactorUserPhone === true" style="display: inline;width: 450px">
                                 <el-input
                                         type="text"
@@ -119,7 +131,7 @@
                                 </button>
                             </div>
                             <div style="float: right;display: inline;">
-                                <el-button type="primary" size="small"  @click="refactor('phone')">修改</el-button>
+                                <el-button type="primary" size="small" @click="refactor('phone')">修改</el-button>
                             </div>
                         </el-descriptions-item>
                         <el-descriptions-item>
@@ -142,22 +154,23 @@
                                 </button>
                             </div>
                             <div style="float: right;display: inline;">
-                                <el-button type="primary" size="small"  @click="refactor('city')">修改</el-button>
+                                <el-button type="primary" size="small" @click="refactor('city')">修改</el-button>
                             </div>
                         </el-descriptions-item>
-<!--                        <el-descriptions-item>-->
-<!--                            <template slot="label">-->
-<!--                                <i class="el-icon-tickets"></i>-->
-<!--                                备注-->
-<!--                            </template>-->
-<!--                            <el-tag size="small">学校</el-tag>-->
-<!--                        </el-descriptions-item>-->
+                        <!--                        <el-descriptions-item>-->
+                        <!--                            <template slot="label">-->
+                        <!--                                <i class="el-icon-tickets"></i>-->
+                        <!--                                备注-->
+                        <!--                            </template>-->
+                        <!--                            <el-tag size="small">学校</el-tag>-->
+                        <!--                        </el-descriptions-item>-->
                         <el-descriptions-item>
                             <template slot="label">
                                 <i class="el-icon-office-building"></i>
                                 联系地址
                             </template>
-                            <span v-show="refactorUserAddress === false" style="margin-top: 10px">{{userInfo.address}}</span>
+                            <span v-show="refactorUserAddress === false"
+                                  style="margin-top: 10px">{{userInfo.address}}</span>
                             <div v-show="refactorUserAddress === true" style="display: inline;width: 450px">
                                 <el-input
                                         type="text"
@@ -172,7 +185,7 @@
                                 </button>
                             </div>
                             <div style="float: right;display: inline;">
-                                <el-button type="primary" size="small"  @click="refactor('address')">修改</el-button>
+                                <el-button type="primary" size="small" @click="refactor('address')">修改</el-button>
                             </div>
                         </el-descriptions-item>
                         <el-descriptions-item>
@@ -181,7 +194,7 @@
                                 性别
                             </template>
 
-<!--                            {{userInfo.sex === 1? '男':'女'}}-->
+                            <!--                            {{userInfo.sex === 1? '男':'女'}}-->
                             <span v-show="refactorUserSex === false" style="margin-top: 10px">{{userInfo.sex === 1? '男':'女'}}</span>
                             <div v-show="refactorUserSex === true" style="display: inline;width: 450px">
                                 <el-radio v-model="userInfo.sex" label=1>男</el-radio>
@@ -194,7 +207,7 @@
                                 </button>
                             </div>
                             <div style="float: right;display: inline;">
-                                <el-button type="primary" size="small"  @click="refactor('sex')">修改</el-button>
+                                <el-button type="primary" size="small" @click="refactor('sex')">修改</el-button>
                             </div>
                         </el-descriptions-item>
                         <el-descriptions-item>
@@ -252,6 +265,7 @@
     import rubbish from '../rubbish/index'
     import chat from '../chat/index'
     import upload from '../common/upload'
+    import pageHead from '../common/header'
 
     export default {
         name: 'homePage',
@@ -320,7 +334,8 @@
             rubbish,
             file,
             chat,
-            upload
+            upload,
+            pageHead
         },
         created () {
             this.$nextTick(() => {
@@ -351,6 +366,9 @@
         //     }
         // },
         methods: {
+            updatePass () {
+                this.isUpdatePass = true
+            },
             refreshRubbish () {
                 this.getDelete()
             },
@@ -511,7 +529,7 @@
                         'newPassword': encryptor.encrypt(this.info.newPassword)
                     }
                     console.log(data)
-                    this.axios.put('/user/update', data).then(res => {
+                    this.put('/user/update', data).then(res => {
                         this.$message.success('修改成功')
                         this.isUpdatePass = false
                         setTimeout(() => {
