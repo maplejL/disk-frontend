@@ -7,7 +7,7 @@
                      @click="home"
                 >
             </div>
-            <div class="layout-nav">
+            <div class="layout-nav" v-if="userInfo !== undefined">
                 <MenuItem name="1">
                     <Icon type="ios-navigate"></Icon>
                     <span v-if="userInfo === null" @click="doLogin">登录</span>
@@ -58,6 +58,9 @@
                         </el-dropdown>
                     </el-badge>
                 </MenuItem>
+            </div>
+            <div v-else class="layout-nav" style="width: 450px">
+                <p style="color: white">访客您好, 该页面只可预览文件, 若要进入网盘主页可点击左侧logo</p>
             </div>
         </Menu>
     </Header>

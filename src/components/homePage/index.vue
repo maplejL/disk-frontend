@@ -31,7 +31,7 @@
                                         <i class="el-icon-folder-opened"></i>
                                         全部文件
                                     </template>
-                                    <MenuItem name="全部">全部</MenuItem>
+<!--                                    <MenuItem name="全部">全部</MenuItem>-->
                                     <MenuItem name="视频">视频</MenuItem>
                                     <MenuItem name="文档">文档</MenuItem>
                                     <MenuItem name="音乐">音乐</MenuItem>

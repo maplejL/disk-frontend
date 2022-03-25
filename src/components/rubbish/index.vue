@@ -46,7 +46,7 @@
                     </el-image>
                     <el-image-viewer
                             v-if="showViewer === 1"
-                            style="transform: scale(1) rotate(0deg); margin: auto; max-height: 70%; max-width: 70%;"
+                            style="transform: scale(1) rotate(0deg); margin: auto; max-height: 80%; max-width: 80%;"
                             :on-close="closeViewer"
                             :url-list="srcList"/>
                 </template>

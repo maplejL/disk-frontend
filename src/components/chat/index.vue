@@ -197,26 +197,29 @@
                         let data = {}
                         let treeType = this.typeName[i]
                         data.label = treeType
+                        data.id = i + 1
+                        let files
                         switch (treeType) {
                         case '视频':
-                            data.children = this.files.视频
+                            files = this.files.视频.fileName
                             break
                         case '图片':
-                            data.children = this.files.图片
+                            files = this.files.图片.fileName
                             break
                         case '音乐':
-                            data.children = this.files.音乐
+                            files = this.files.音乐.fileName
                             break
                         case '文档':
-                            data.children = this.files.文档
+                            files = this.files.文档.fileName
                             break
                         }
-                        for (let j = 0; j < data.children.length; j++) {
-                            data.children[j].content = data.children[j].fileName
+                        for (let j = 0; j < files.length; j++) {
+                            files[j].label = files[j].fileName
+                            files[j].id = files[j].id
                         }
                         this.treeData.push(data)
+                        console.log(data)
                     }
-                    console.log(this.treeData)
                     this.dialogVisible = true
                 })
             },

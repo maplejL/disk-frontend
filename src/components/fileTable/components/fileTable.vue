@@ -1,10 +1,10 @@
 <template>
     <div>
-        <div v-if="typeCode === 0">
-            <ul class="infinite-list" v-infinite-scroll="load" style="overflow:auto">
-                <li v-for="i in count" class="infinite-list-item" :key="i">{{ i }}</li>
-            </ul>
-        </div>
+<!--        <div v-if="typeCode === 0">-->
+<!--            <ul class="infinite-list" v-infinite-scroll="load" style="overflow:auto">-->
+<!--                <li v-for="i in count" class="infinite-list-item" :key="i">{{ i }}</li>-->
+<!--            </ul>-->
+<!--        </div>-->
         <div>
             <el-dialog
                     title="请选择分享方式"
@@ -12,9 +12,9 @@
                 <el-form>
                     <el-form-item>
                         <el-radio v-model="radio" label="1">生成链接</el-radio>
-                        <el-radio v-model="radio" label="2">分享好友</el-radio>
+                        <el-radio v-model="radio" label="2">与好友共享</el-radio>
                     </el-form-item>
-                    <el-form-item label="公司类型">
+                    <el-form-item label="有效时间">
                         <el-select v-model="validityPeriod" >
                             <el-option label="请选择" value=""></el-option>
                             <el-option v-for="item in validityPeriods" :key="item.id" :label="item.value" :value="item.value">
@@ -28,15 +28,25 @@
                 </span>
             </el-dialog>
         </div>
-        <div>
-            <el-dialog title="分享二维码" :visible.sync="generateLink" width="300px">
-                <img :src="qrcodeUrl">
+        <div class="link">
+            <el-dialog title="分享文件链接创建成功" :visible.sync="generateLink" width="600px;height: 500px">
+                <div style="width: 400px;height: 500px;float: left">
+                    <el-input v-model="linkUrl">
+                    </el-input>
+                    <p style="margin-top: 20px">
+                        提取码: {{extractionCode}}
+                    </p>
+                </div>
+                <div style="width: 300px;float: right">
+                    <img :src="qrcodeUrl" style="width: 200px;height: 200px;margin-left: 50px">
+                    <p style="text-align: center">扫码即可获取文件，无需提取码</p>
+                </div>
             </el-dialog>
         </div>
         <div>
             <el-dialog
-                    title="好友分享"
-                    :visible.sync="dialogVisible">
+                    title="好友共享"
+                    :visible.sync="dialogVisible" style="height: 700px">
                 <el-transfer
                         v-show="friendList !== null"
                         filterable
@@ -121,7 +131,7 @@
                         </el-image>
                         <el-image-viewer
                                 v-if="showViewer === 1"
-                                style="transform: scale(1) rotate(0deg); margin: auto; max-height: 70%; max-width: 70%;"
+                                style="transform: scale(1) rotate(0deg); margin: auto; max-height: 80%; max-width: 80%;"
                                 :on-close="closeViewer"
                                 :url-list="srcList"/>
                     </template>
@@ -292,6 +302,10 @@
         border-radius: 20px
     }
 
+    /deep/ .link .el-dialog__body {
+        height: 300px;
+    }
+
 </style>
 
 <script>
@@ -329,6 +343,7 @@
                 down: '下载',
                 radio: '1',
                 count: 0,
+                extractionCode: '',
                 more: '更多',
                 videoState: false,
                 chooseShare: false,
@@ -344,6 +359,7 @@
                 audioArtist: 'unknown',
                 refactorData: null,
                 chosenFriends: [],
+                linkUrl: '',
                 qrcodeUrl: '',
                 friendList: [],
                 imrUrl: '',
@@ -384,8 +400,22 @@
                 if (this.radio === '2') {
                     this.getFriends()
                 } else {
-                    this.get('/file/generateQRCode', {'fileId': this.chosenFileId}).then(res => {
-                        this.qrcodeUrl = 'data:image/png;base64,' + res.data.data
+                    let valid = 0
+                    switch (this.validityPeriod) {
+                    case '1天':
+                        valid = 1
+                        break
+                    case '7天':
+                        valid = 7
+                        break
+                    case '30天':
+                        valid = 30
+                        break
+                    }
+                    this.get('/file/generateQRCode', {'fileId': this.chosenFileId, 'valid': valid}).then(res => {
+                        this.qrcodeUrl = 'data:image/png;base64,' + res.data.data.encode
+                        this.linkUrl = res.data.data.url
+                        this.extractionCode = res.data.data.extractionCode
                         this.generateLink = true
                     })
                 }

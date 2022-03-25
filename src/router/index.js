@@ -30,6 +30,11 @@ export default new Router({
             path: '/register',
             name: 'register',
             component: () => import('../components/register/index')
+        },
+        {
+            path: '/share',
+            name: 'share',
+            component: () => import('../components/share/index')
         }
     ]
 })
